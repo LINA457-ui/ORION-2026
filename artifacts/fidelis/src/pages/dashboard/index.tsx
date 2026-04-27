@@ -5,7 +5,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Area, AreaChart } from "recharts";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, ChevronUp, ChevronDown, Activity, Clock, Briefcase } from "lucide-react";
+import { ArrowRight, ChevronUp, ChevronDown, Activity, Clock, Briefcase, ArrowDownRight, ArrowUpRight, Coins, Receipt, Banknote } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 export default function DashboardPage() {
@@ -33,7 +33,7 @@ export default function DashboardPage() {
     return <div className="text-destructive">Failed to load dashboard.</div>;
   }
 
-  const { account, equityCurve, positions, watchlist, indices, movers, recentOrders, news } = summary;
+  const { account, equityCurve, positions, watchlist, indices, movers, recentOrders, recentTransactions, news } = summary;
   const isPositive = equityCurve.change >= 0;
 
   return (
@@ -187,6 +187,105 @@ export default function DashboardPage() {
         </Card>
       </div>
       
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <div className="space-y-1">
+              <CardTitle>Recent Orders</CardTitle>
+              <CardDescription>Latest trades on your account</CardDescription>
+            </div>
+            <Button variant="ghost" size="sm" asChild className="h-8">
+              <Link href="/portfolio">View all <ArrowRight className="ml-1 w-3 h-3" /></Link>
+            </Button>
+          </CardHeader>
+          <CardContent>
+            {recentOrders.length > 0 ? (
+              <div className="divide-y">
+                {recentOrders.slice(0, 5).map(o => {
+                  const isBuy = o.side === "buy";
+                  return (
+                    <div key={o.id} className="flex items-center justify-between py-3 first:pt-1">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${isBuy ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}>
+                          {isBuy ? <ArrowDownRight className="w-4 h-4" /> : <ArrowUpRight className="w-4 h-4" />}
+                        </div>
+                        <div>
+                          <div className="font-bold flex items-center gap-2">
+                            <span className="uppercase text-xs font-semibold tracking-wide">{o.side}</span>
+                            <Link href={`/markets/${o.symbol}`} className="hover:underline">{o.symbol}</Link>
+                          </div>
+                          <div className="text-xs text-muted-foreground">{o.quantity} shares @ {formatCurrency(o.price)}</div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-medium">{formatCurrency(o.total)}</div>
+                        <div className="text-xs text-muted-foreground flex items-center gap-1 justify-end">
+                          <Clock className="w-3 h-3" />
+                          {new Date(o.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="py-8 flex flex-col items-center justify-center text-center text-muted-foreground">
+                <Activity className="w-10 h-10 mb-2 opacity-20" />
+                <p>No orders yet</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <div className="space-y-1">
+              <CardTitle>Recent Transactions</CardTitle>
+              <CardDescription>Deposits, dividends and fees</CardDescription>
+            </div>
+            <Button variant="ghost" size="sm" asChild className="h-8">
+              <Link href="/transactions">View all <ArrowRight className="ml-1 w-3 h-3" /></Link>
+            </Button>
+          </CardHeader>
+          <CardContent>
+            {recentTransactions.length > 0 ? (
+              <div className="divide-y">
+                {recentTransactions.slice(0, 5).map(t => {
+                  const isPositive = t.amount >= 0;
+                  const Icon = t.type === "deposit" ? Banknote : t.type === "dividend" ? Coins : t.type === "fee" ? Receipt : isPositive ? ArrowDownRight : ArrowUpRight;
+                  return (
+                    <div key={t.id} className="flex items-center justify-between py-3 first:pt-1">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${isPositive ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"}`}>
+                          <Icon className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <div className="font-medium text-sm capitalize">{t.type}</div>
+                          <div className="text-xs text-muted-foreground line-clamp-1">{t.description}</div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className={`font-semibold ${isPositive ? "text-success" : "text-foreground"}`}>
+                          {isPositive ? "+" : ""}{formatCurrency(t.amount)}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          {new Date(t.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="py-8 flex flex-col items-center justify-center text-center text-muted-foreground">
+                <Receipt className="w-10 h-10 mb-2 opacity-20" />
+                <p>No transactions yet</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
