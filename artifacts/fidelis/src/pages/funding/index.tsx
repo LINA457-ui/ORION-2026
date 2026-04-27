@@ -48,7 +48,7 @@ export default function FundingPage() {
             <div>
               <h3 className="text-xl font-bold mb-2">Funding Coming Soon</h3>
               <p className="text-muted-foreground max-w-sm">
-                Fidelis Investments is currently in a closed beta simulation mode. Stripe payments are not yet configured for live deposits. 
+                Orion Investment is currently in a closed beta simulation mode. Stripe payments are not yet configured for live deposits. 
               </p>
             </div>
           </CardContent>

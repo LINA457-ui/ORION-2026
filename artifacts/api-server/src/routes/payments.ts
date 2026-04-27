@@ -47,7 +47,7 @@ router.post("/deposit", async (req, res: Response) => {
       {
         price_data: {
           currency: "usd",
-          product_data: { name: "Fidelis brokerage deposit" },
+          product_data: { name: "Orion brokerage deposit" },
           unit_amount: Math.round(body.amount * 100),
         },
         quantity: 1,

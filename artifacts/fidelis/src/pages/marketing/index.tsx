@@ -44,9 +44,9 @@ export default function MarketingPage() {
       <footer className="bg-muted/50 border-t py-12">
         <div className="container max-w-6xl mx-auto px-4 text-center text-sm text-muted-foreground">
           <div className="flex justify-center mb-6 opacity-50 grayscale"><Logo /></div>
-          <p className="mb-2">© {new Date().getFullYear()} Fidelis Investments. All rights reserved.</p>
+          <p className="mb-2">© {new Date().getFullYear()} Orion Investment. All rights reserved.</p>
           <p className="max-w-2xl mx-auto text-xs">
-            Fidelis Investments is a simulated paper-trading application built for demonstration purposes. 
+            Orion Investment is a simulated paper-trading application built for demonstration purposes. 
             No real money is transacted. Not financial advice.
           </p>
         </div>
@@ -108,7 +108,7 @@ function FeaturesSection() {
       icon: <LineChart className="w-10 h-10 text-primary mb-4" />
     },
     {
-      title: "Fidelis AI Advisor",
+      title: "Orion AI Advisor",
       desc: "Get instant insights, portfolio analysis, and market summaries from our built-in AI assistant.",
       icon: <BrainCircuit className="w-10 h-10 text-primary mb-4" />
     },
@@ -122,7 +122,7 @@ function FeaturesSection() {
   return (
     <section className="py-24 bg-muted/30">
       <div className="container max-w-6xl mx-auto px-4">
-        <h2 className="font-serif text-3xl font-bold text-center mb-16">Why choose Fidelis?</h2>
+        <h2 className="font-serif text-3xl font-bold text-center mb-16">Why choose Orion?</h2>
         <div className="grid md:grid-cols-3 gap-12">
           {features.map((f, i) => (
             <div key={i} className="bg-card p-8 rounded-xl border shadow-sm flex flex-col items-center text-center">

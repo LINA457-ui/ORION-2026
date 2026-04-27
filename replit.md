@@ -29,7 +29,9 @@ See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and pa
 
 ## Artifacts
 
-### Fidelis Investments (`artifacts/fidelis`)
+### Orion Investment (`artifacts/fidelis`)
+NOTE: directory and pnpm package name remain `fidelis` (do not rename — it would force re-registering the artifact). User-facing brand is "Orion Investment".
+
 A Fidelity-style investment banking website at root path `/` with:
 - Public marketing landing page (deep institutional green theme).
 - Clerk auth (`@clerk/react` v6, managed by Replit). Routes: `/sign-in/*?`, `/sign-up/*?`.

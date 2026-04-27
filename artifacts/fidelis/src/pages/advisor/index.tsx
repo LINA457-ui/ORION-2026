@@ -225,7 +225,7 @@ export default function AdvisorPage() {
               {localMessages.length === 0 && !loadingMsgs && (
                 <div className="h-full flex flex-col items-center justify-center text-muted-foreground opacity-70">
                   <BrainCircuit className="w-12 h-12 mb-4" />
-                  <p className="text-base font-medium">Fidelis Advisor</p>
+                  <p className="text-base font-medium">Orion Advisor</p>
                   <p className="text-sm mt-1">How can I help you analyze the markets today?</p>
                 </div>
               )}
@@ -250,7 +250,7 @@ export default function AdvisorPage() {
                 </Button>
               </form>
               <div className="text-center text-xs text-muted-foreground mt-2">
-                Fidelis Advisor can make mistakes. Consider verifying important information.
+                Orion Advisor can make mistakes. Consider verifying important information.
               </div>
             </div>
           </>

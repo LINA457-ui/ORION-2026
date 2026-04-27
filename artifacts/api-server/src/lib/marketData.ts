@@ -468,7 +468,7 @@ export function getNews(): NewsItem[] {
     {
       id: "n1",
       headline: "Fed signals patient stance as inflation cools toward target",
-      source: "Fidelis Wire",
+      source: "Orion Wire",
       category: "Macro",
       symbols: [],
       summary:
@@ -486,7 +486,7 @@ export function getNews(): NewsItem[] {
     {
       id: "n3",
       headline: "Apple expands services bundle to include premium AI tier",
-      source: "Fidelis Research",
+      source: "Orion Research",
       category: "Technology",
       symbols: ["AAPL"],
       summary:
@@ -495,7 +495,7 @@ export function getNews(): NewsItem[] {
     {
       id: "n4",
       headline: "Energy stocks gain as crude posts third weekly advance",
-      source: "Fidelis Wire",
+      source: "Orion Wire",
       category: "Commodities",
       symbols: ["XOM"],
       summary:
@@ -513,7 +513,7 @@ export function getNews(): NewsItem[] {
     {
       id: "n6",
       headline: "Tesla deliveries beat consensus on China demand rebound",
-      source: "Fidelis Research",
+      source: "Orion Research",
       category: "Autos",
       symbols: ["TSLA"],
       summary:
@@ -522,7 +522,7 @@ export function getNews(): NewsItem[] {
     {
       id: "n7",
       headline: "Healthcare names rotate higher as defensive bid resurfaces",
-      source: "Fidelis Wire",
+      source: "Orion Wire",
       category: "Sectors",
       symbols: ["JNJ", "PFE"],
       summary:
