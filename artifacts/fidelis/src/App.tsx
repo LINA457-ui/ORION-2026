@@ -1,4 +1,3 @@
-import { ClerkProvider } from "@clerk/react";
 import { Switch, Route, Router as WouterRouter } from "wouter";
 import { QueryClientProvider } from "@tanstack/react-query";
 
@@ -25,12 +24,6 @@ import Advisor from "@/pages/advisor";
 import Funding from "@/pages/funding";
 import FundingSuccess from "@/pages/funding/success";
 import Profile from "@/pages/profile";
-
-const clerkPublishableKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
-
-if (!clerkPublishableKey) {
-  throw new Error("Missing VITE_CLERK_PUBLISHABLE_KEY in .env");
-}
 
 function AppRoutes() {
   return (
@@ -138,17 +131,15 @@ function AppRoutes() {
 
 export default function App() {
   return (
-    <ClerkProvider publishableKey={clerkPublishableKey}>
-      <QueryClientProvider client={queryClient}>
-        <ThemeProvider>
-          <TooltipProvider>
-            <WouterRouter>
-              <AppRoutes />
-            </WouterRouter>
-            <Toaster />
-          </TooltipProvider>
-        </ThemeProvider>
-      </QueryClientProvider>
-    </ClerkProvider>
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider>
+        <TooltipProvider>
+          <WouterRouter>
+            <AppRoutes />
+          </WouterRouter>
+          <Toaster />
+        </TooltipProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
   );
 }

@@ -23,7 +23,11 @@ if (!clerkPubKey) {
 }
 
 createRoot(rootElement).render(
-  <ClerkProvider publishableKey={clerkPubKey} signInUrl="/sign-in" signUpUrl="/sign-up">
+  <ClerkProvider
+    publishableKey={clerkPubKey}
+    signInUrl="/sign-in"
+    signUpUrl="/sign-up"
+  >
     <App />
   </ClerkProvider>
 );
