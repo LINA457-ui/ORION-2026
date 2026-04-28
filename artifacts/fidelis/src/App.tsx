@@ -1,10 +1,12 @@
+import { ClerkProvider } from "@clerk/react";
 import { Switch, Route, Router as WouterRouter } from "wouter";
 import { QueryClientProvider } from "@tanstack/react-query";
+
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { queryClient } from "@/lib/queryClient";
-import NotFound from "@/pages/not-found";
 
+import NotFound from "@/pages/not-found";
 import { Shell } from "@/components/layout/Shell";
 import { ProtectedRoute } from "@/components/layout/ProtectedRoute";
 import { ThemeProvider } from "@/components/layout/ThemeProvider";
@@ -24,43 +26,129 @@ import Funding from "@/pages/funding";
 import FundingSuccess from "@/pages/funding/success";
 import Profile from "@/pages/profile";
 
-function Router() {
+const clerkPublishableKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+
+if (!clerkPublishableKey) {
+  throw new Error("Missing VITE_CLERK_PUBLISHABLE_KEY in .env");
+}
+
+function AppRoutes() {
   return (
     <Switch>
       <Route path="/" component={Marketing} />
-      <Route path="/sign-in/*?" component={SignIn} />
-      <Route path="/sign-up/*?" component={SignUp} />
-      
-      <Route path="/dashboard"><ProtectedRoute><Shell><Dashboard /></Shell></ProtectedRoute></Route>
-      <Route path="/portfolio"><ProtectedRoute><Shell><Portfolio /></Shell></ProtectedRoute></Route>
-      <Route path="/markets"><ProtectedRoute><Shell><Markets /></Shell></ProtectedRoute></Route>
-      <Route path="/markets/:symbol"><ProtectedRoute><Shell><SymbolDetail /></Shell></ProtectedRoute></Route>
-      <Route path="/trade"><ProtectedRoute><Shell><Trade /></Shell></ProtectedRoute></Route>
-      <Route path="/watchlist"><ProtectedRoute><Shell><Watchlist /></Shell></ProtectedRoute></Route>
-      <Route path="/transactions"><ProtectedRoute><Shell><Transactions /></Shell></ProtectedRoute></Route>
-      <Route path="/advisor"><ProtectedRoute><Shell><Advisor /></Shell></ProtectedRoute></Route>
-      <Route path="/funding"><ProtectedRoute><Shell><Funding /></Shell></ProtectedRoute></Route>
-      <Route path="/funding/success"><ProtectedRoute><Shell><FundingSuccess /></Shell></ProtectedRoute></Route>
-      <Route path="/profile"><ProtectedRoute><Shell><Profile /></Shell></ProtectedRoute></Route>
-      
+
+      <Route path="/sign-in" component={SignIn} />
+      <Route path="/sign-in/*" component={SignIn} />
+
+      <Route path="/sign-up" component={SignUp} />
+      <Route path="/sign-up/*" component={SignUp} />
+
+      <Route path="/dashboard">
+        <ProtectedRoute>
+          <Shell>
+            <Dashboard />
+          </Shell>
+        </ProtectedRoute>
+      </Route>
+
+      <Route path="/portfolio">
+        <ProtectedRoute>
+          <Shell>
+            <Portfolio />
+          </Shell>
+        </ProtectedRoute>
+      </Route>
+
+      <Route path="/markets">
+        <ProtectedRoute>
+          <Shell>
+            <Markets />
+          </Shell>
+        </ProtectedRoute>
+      </Route>
+
+      <Route path="/markets/:symbol">
+        <ProtectedRoute>
+          <Shell>
+            <SymbolDetail />
+          </Shell>
+        </ProtectedRoute>
+      </Route>
+
+      <Route path="/trade">
+        <ProtectedRoute>
+          <Shell>
+            <Trade />
+          </Shell>
+        </ProtectedRoute>
+      </Route>
+
+      <Route path="/watchlist">
+        <ProtectedRoute>
+          <Shell>
+            <Watchlist />
+          </Shell>
+        </ProtectedRoute>
+      </Route>
+
+      <Route path="/transactions">
+        <ProtectedRoute>
+          <Shell>
+            <Transactions />
+          </Shell>
+        </ProtectedRoute>
+      </Route>
+
+      <Route path="/advisor">
+        <ProtectedRoute>
+          <Shell>
+            <Advisor />
+          </Shell>
+        </ProtectedRoute>
+      </Route>
+
+      <Route path="/funding">
+        <ProtectedRoute>
+          <Shell>
+            <Funding />
+          </Shell>
+        </ProtectedRoute>
+      </Route>
+
+      <Route path="/funding/success">
+        <ProtectedRoute>
+          <Shell>
+            <FundingSuccess />
+          </Shell>
+        </ProtectedRoute>
+      </Route>
+
+      <Route path="/profile">
+        <ProtectedRoute>
+          <Shell>
+            <Profile />
+          </Shell>
+        </ProtectedRoute>
+      </Route>
+
       <Route component={NotFound} />
     </Switch>
   );
 }
 
-function App() {
+export default function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
-        <TooltipProvider>
-          <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-            <Router />
-          </WouterRouter>
-          <Toaster />
-        </TooltipProvider>
-      </ThemeProvider>
-    </QueryClientProvider>
+    <ClerkProvider publishableKey={clerkPublishableKey}>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider>
+          <TooltipProvider>
+            <WouterRouter>
+              <AppRoutes />
+            </WouterRouter>
+            <Toaster />
+          </TooltipProvider>
+        </ThemeProvider>
+      </QueryClientProvider>
+    </ClerkProvider>
   );
 }
-
-export default App;
