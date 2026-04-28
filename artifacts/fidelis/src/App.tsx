@@ -25,6 +25,14 @@ import Funding from "@/pages/funding";
 import FundingSuccess from "@/pages/funding/success";
 import Profile from "@/pages/profile";
 
+function ProtectedShellPage({ children }: { children: React.ReactNode }) {
+  return (
+    <ProtectedRoute>
+      <Shell>{children}</Shell>
+    </ProtectedRoute>
+  );
+}
+
 function AppRoutes() {
   return (
     <Switch>
@@ -37,91 +45,69 @@ function AppRoutes() {
       <Route path="/sign-up/*" component={SignUp} />
 
       <Route path="/dashboard">
-        <ProtectedRoute>
-          <Shell>
-            <Dashboard />
-          </Shell>
-        </ProtectedRoute>
+        <ProtectedShellPage>
+          <Dashboard />
+        </ProtectedShellPage>
       </Route>
 
       <Route path="/portfolio">
-        <ProtectedRoute>
-          <Shell>
-            <Portfolio />
-          </Shell>
-        </ProtectedRoute>
+        <ProtectedShellPage>
+          <Portfolio />
+        </ProtectedShellPage>
       </Route>
 
       <Route path="/markets">
-        <ProtectedRoute>
-          <Shell>
-            <Markets />
-          </Shell>
-        </ProtectedRoute>
+        <ProtectedShellPage>
+          <Markets />
+        </ProtectedShellPage>
       </Route>
 
       <Route path="/markets/:symbol">
-        <ProtectedRoute>
-          <Shell>
-            <SymbolDetail />
-          </Shell>
-        </ProtectedRoute>
+        <ProtectedShellPage>
+          <SymbolDetail />
+        </ProtectedShellPage>
       </Route>
 
       <Route path="/trade">
-        <ProtectedRoute>
-          <Shell>
-            <Trade />
-          </Shell>
-        </ProtectedRoute>
+        <ProtectedShellPage>
+          <Trade />
+        </ProtectedShellPage>
       </Route>
 
       <Route path="/watchlist">
-        <ProtectedRoute>
-          <Shell>
-            <Watchlist />
-          </Shell>
-        </ProtectedRoute>
+        <ProtectedShellPage>
+          <Watchlist />
+        </ProtectedShellPage>
       </Route>
 
       <Route path="/transactions">
-        <ProtectedRoute>
-          <Shell>
-            <Transactions />
-          </Shell>
-        </ProtectedRoute>
+        <ProtectedShellPage>
+          <Transactions />
+        </ProtectedShellPage>
       </Route>
 
       <Route path="/advisor">
-        <ProtectedRoute>
-          <Shell>
-            <Advisor />
-          </Shell>
-        </ProtectedRoute>
+        <ProtectedShellPage>
+          <Advisor />
+        </ProtectedShellPage>
       </Route>
 
       <Route path="/funding">
-        <ProtectedRoute>
-          <Shell>
-            <Funding />
-          </Shell>
-        </ProtectedRoute>
+        <ProtectedShellPage>
+          <Funding />
+        </ProtectedShellPage>
       </Route>
 
       <Route path="/funding/success">
-        <ProtectedRoute>
-          <Shell>
-            <FundingSuccess />
-          </Shell>
-        </ProtectedRoute>
+        <ProtectedShellPage>
+          <FundingSuccess />
+        </ProtectedShellPage>
       </Route>
 
       <Route path="/profile">
-        <ProtectedRoute>
-          <Shell>
-            <Profile />
-          </Shell>
-        </ProtectedRoute>
+        <ProtectedShellPage>
+          <Profile />
+        </ProtectedShellPage>
       </Route>
 
       <Route component={NotFound} />
