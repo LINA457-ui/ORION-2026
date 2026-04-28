@@ -18,7 +18,10 @@ app.use(
 
 app.use(
   cors({
-    origin: true,
+    origin: [
+      "http://localhost:5173",
+      "https://orion-2026-fidelis.vercel.app",
+    ],
     credentials: true,
   })
 );
