@@ -1,63 +1,128 @@
 import { useState } from "react";
-import { useListPositions, useGetAllocation, useGetAccountPerformance } from "@workspace/api-client-react";
-import { formatCurrency, formatPercent, formatChange } from "@/lib/format";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  useListPositions,
+  useGetAllocation,
+  useGetAccountPerformance,
+} from "@workspace/api-client-react";
+import { formatCurrency, formatChange } from "@/lib/format";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, LineChart, Line, XAxis, YAxis, CartesianGrid } from "recharts";
+import {
+  PieChart,
+  Pie,
+  Cell,
+  ResponsiveContainer,
+  Tooltip as RechartsTooltip,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+} from "recharts";
 import { Link } from "wouter";
-import { Badge } from "@/components/ui/badge";
 import { ArrowUpRight } from "lucide-react";
 
 export default function PortfolioPage() {
-  const [range, setRange] = useState<"1D"|"1W"|"1M"|"3M"|"1Y"|"ALL">("1M");
-  
+  const [range, setRange] = useState<"1D" | "1W" | "1M" | "3M" | "1Y" | "ALL">(
+    "1M"
+  );
+
   const { data: positions, isLoading: loadingPos } = useListPositions();
   const { data: allocation, isLoading: loadingAlloc } = useGetAllocation();
-  const { data: performance, isLoading: loadingPerf } = useGetAccountPerformance({ range });
+  const { data: performance, isLoading: loadingPerf } =
+    useGetAccountPerformance({ range });
+
+  const bySector = Array.isArray(allocation?.bySector)
+    ? allocation.bySector
+    : [];
+
+  const byAsset = Array.isArray(allocation?.byAsset) ? allocation.byAsset : [];
+
+  const performancePoints = Array.isArray(performance?.points)
+    ? performance.points
+    : [];
 
   const COLORS = [
-    'hsl(var(--chart-1))',
-    'hsl(var(--chart-2))',
-    'hsl(var(--chart-3))',
-    'hsl(var(--chart-4))',
-    'hsl(var(--chart-5))',
-    'hsl(var(--primary))'
+    "hsl(var(--chart-1))",
+    "hsl(var(--chart-2))",
+    "hsl(var(--chart-3))",
+    "hsl(var(--chart-4))",
+    "hsl(var(--chart-5))",
+    "hsl(var(--primary))",
   ];
 
   if (loadingPos || loadingAlloc || loadingPerf) {
-    return <div className="p-8"><Skeleton className="h-[600px] w-full" /></div>;
+    return (
+      <div className="p-8">
+        <Skeleton className="h-[600px] w-full" />
+      </div>
+    );
   }
 
-  const totalMarketValue = positions?.reduce((acc, pos) => acc + pos.marketValue, 0) || 0;
-  const totalUnrealizedPnl = positions?.reduce((acc, pos) => acc + pos.unrealizedPnl, 0) || 0;
+  const totalMarketValue =
+    positions?.reduce((acc, pos) => acc + pos.marketValue, 0) || 0;
+
+  const totalUnrealizedPnl =
+    positions?.reduce((acc, pos) => acc + pos.unrealizedPnl, 0) || 0;
 
   return (
     <div className="space-y-6 pb-8">
       <div>
-        <h1 className="text-3xl font-serif font-bold tracking-tight">Portfolio</h1>
-        <p className="text-muted-foreground">Manage your holdings and asset allocation</p>
+        <h1 className="text-3xl font-serif font-bold tracking-tight">
+          Portfolio
+        </h1>
+        <p className="text-muted-foreground">
+          Manage your holdings and asset allocation
+        </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
         <Card>
           <CardContent className="pt-6">
-            <div className="text-sm font-medium text-muted-foreground mb-1">Total Market Value</div>
-            <div className="text-3xl font-bold">{formatCurrency(totalMarketValue)}</div>
+            <div className="text-sm font-medium text-muted-foreground mb-1">
+              Total Market Value
+            </div>
+            <div className="text-3xl font-bold">
+              {formatCurrency(totalMarketValue)}
+            </div>
           </CardContent>
         </Card>
+
         <Card>
           <CardContent className="pt-6">
-            <div className="text-sm font-medium text-muted-foreground mb-1">Total Unrealized P&L</div>
-            <div className={`text-3xl font-bold ${totalUnrealizedPnl >= 0 ? "text-success" : "text-destructive"}`}>
+            <div className="text-sm font-medium text-muted-foreground mb-1">
+              Total Unrealized P&L
+            </div>
+            <div
+              className={`text-3xl font-bold ${
+                totalUnrealizedPnl >= 0 ? "text-success" : "text-destructive"
+              }`}
+            >
               {formatChange(totalUnrealizedPnl)}
             </div>
           </CardContent>
         </Card>
+
         <Card>
           <CardContent className="pt-6">
-            <div className="text-sm font-medium text-muted-foreground mb-1">Positions Count</div>
+            <div className="text-sm font-medium text-muted-foreground mb-1">
+              Positions Count
+            </div>
             <div className="text-3xl font-bold">{positions?.length || 0}</div>
           </CardContent>
         </Card>
@@ -84,10 +149,14 @@ export default function PortfolioPage() {
                   <TableHead className="text-right">Market Value</TableHead>
                 </TableRow>
               </TableHeader>
+
               <TableBody>
                 {!positions?.length ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
+                    <TableCell
+                      colSpan={7}
+                      className="h-24 text-center text-muted-foreground"
+                    >
                       No open positions
                     </TableCell>
                   </TableRow>
@@ -95,24 +164,59 @@ export default function PortfolioPage() {
                   positions.map((pos) => (
                     <TableRow key={pos.id} className="group">
                       <TableCell className="font-medium">
-                        <Link href={`/markets/${pos.symbol}`} className="hover:underline flex items-center gap-1">
+                        <Link
+                          href={`/markets/${pos.symbol}`}
+                          className="hover:underline flex items-center gap-1"
+                        >
                           {pos.symbol}
                           <ArrowUpRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
                         </Link>
-                        <div className="text-xs text-muted-foreground font-normal">{pos.name}</div>
+                        <div className="text-xs text-muted-foreground font-normal">
+                          {pos.name}
+                        </div>
                       </TableCell>
-                      <TableCell className="text-right">{pos.quantity}</TableCell>
-                      <TableCell className="text-right font-medium">{formatCurrency(pos.currentPrice)}</TableCell>
-                      <TableCell className={`text-right ${pos.dayChange >= 0 ? "text-success" : "text-destructive"}`}>
+
+                      <TableCell className="text-right">
+                        {pos.quantity}
+                      </TableCell>
+
+                      <TableCell className="text-right font-medium">
+                        {formatCurrency(pos.currentPrice)}
+                      </TableCell>
+
+                      <TableCell
+                        className={`text-right ${
+                          pos.dayChange >= 0
+                            ? "text-success"
+                            : "text-destructive"
+                        }`}
+                      >
                         {formatChange(pos.dayChange)}
-                        <div className="text-xs">{formatChange(pos.dayChangePercent, true)}</div>
+                        <div className="text-xs">
+                          {formatChange(pos.dayChangePercent, true)}
+                        </div>
                       </TableCell>
-                      <TableCell className="text-right">{formatCurrency(pos.averageCost)}</TableCell>
-                      <TableCell className={`text-right ${pos.unrealizedPnl >= 0 ? "text-success" : "text-destructive"}`}>
+
+                      <TableCell className="text-right">
+                        {formatCurrency(pos.averageCost)}
+                      </TableCell>
+
+                      <TableCell
+                        className={`text-right ${
+                          pos.unrealizedPnl >= 0
+                            ? "text-success"
+                            : "text-destructive"
+                        }`}
+                      >
                         {formatChange(pos.unrealizedPnl)}
-                        <div className="text-xs">{formatChange(pos.unrealizedPnlPercent, true)}</div>
+                        <div className="text-xs">
+                          {formatChange(pos.unrealizedPnlPercent, true)}
+                        </div>
                       </TableCell>
-                      <TableCell className="text-right font-bold">{formatCurrency(pos.marketValue)}</TableCell>
+
+                      <TableCell className="text-right font-bold">
+                        {formatCurrency(pos.marketValue)}
+                      </TableCell>
                     </TableRow>
                   ))
                 )}
@@ -128,19 +232,30 @@ export default function PortfolioPage() {
                 <CardTitle>Historical Performance</CardTitle>
                 <CardDescription>
                   {performance && (
-                    <span className={performance.change >= 0 ? "text-success font-medium" : "text-destructive font-medium"}>
-                      {formatChange(performance.change)} ({formatChange(performance.changePercent, true)})
+                    <span
+                      className={
+                        performance.change >= 0
+                          ? "text-success font-medium"
+                          : "text-destructive font-medium"
+                      }
+                    >
+                      {formatChange(performance.change)} (
+                      {formatChange(performance.changePercent, true)})
                     </span>
                   )}
                 </CardDescription>
               </div>
+
               <div className="flex gap-1 bg-muted p-1 rounded-md">
-                {(["1D", "1W", "1M", "3M", "1Y", "ALL"] as const).map(r => (
+                {(["1D", "1W", "1M", "3M", "1Y", "ALL"] as const).map((r) => (
                   <button
                     key={r}
+                    type="button"
                     onClick={() => setRange(r)}
                     className={`px-3 py-1 text-xs font-medium rounded-sm transition-colors ${
-                      range === r ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
+                      range === r
+                        ? "bg-background shadow-sm text-foreground"
+                        : "text-muted-foreground hover:text-foreground"
                     }`}
                   >
                     {r}
@@ -148,25 +263,43 @@ export default function PortfolioPage() {
                 ))}
               </div>
             </CardHeader>
+
             <CardContent>
               {performance && (
                 <div className="h-[400px] w-full mt-4">
                   <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={performance.points} margin={{ top: 5, right: 0, left: 0, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
-                      <XAxis 
-                        dataKey="t" 
+                    <LineChart
+                      data={performancePoints}
+                      margin={{ top: 5, right: 0, left: 0, bottom: 0 }}
+                    >
+                      <CartesianGrid
+                        strokeDasharray="3 3"
+                        vertical={false}
+                        stroke="hsl(var(--border))"
+                      />
+
+                      <XAxis
+                        dataKey="t"
                         tickFormatter={(val) => {
                           const d = new Date(val);
-                          return range === '1D' ? `${d.getHours()}:${d.getMinutes().toString().padStart(2, '0')}` : d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-                        }} 
+                          return range === "1D"
+                            ? `${d.getHours()}:${d
+                                .getMinutes()
+                                .toString()
+                                .padStart(2, "0")}`
+                            : d.toLocaleDateString(undefined, {
+                                month: "short",
+                                day: "numeric",
+                              });
+                        }}
                         stroke="hsl(var(--muted-foreground))"
                         fontSize={12}
                         tickLine={false}
                         axisLine={false}
                       />
-                      <YAxis 
-                        domain={['auto', 'auto']}
+
+                      <YAxis
+                        domain={["auto", "auto"]}
                         tickFormatter={(val) => `$${val}`}
                         stroke="hsl(var(--muted-foreground))"
                         fontSize={12}
@@ -174,15 +307,30 @@ export default function PortfolioPage() {
                         axisLine={false}
                         width={60}
                       />
-                      <RechartsTooltip 
-                        contentStyle={{ backgroundColor: 'hsl(var(--popover))', borderColor: 'hsl(var(--border))', borderRadius: '0.5rem' }}
-                        formatter={(value: number) => [formatCurrency(value), 'Value']}
-                        labelFormatter={(label) => new Date(label).toLocaleString()}
+
+                      <RechartsTooltip
+                        contentStyle={{
+                          backgroundColor: "hsl(var(--popover))",
+                          borderColor: "hsl(var(--border))",
+                          borderRadius: "0.5rem",
+                        }}
+                        formatter={(value: number) => [
+                          formatCurrency(value),
+                          "Value",
+                        ]}
+                        labelFormatter={(label) =>
+                          new Date(label).toLocaleString()
+                        }
                       />
-                      <Line 
-                        type="monotone" 
-                        dataKey="v" 
-                        stroke={performance.change >= 0 ? "hsl(var(--success))" : "hsl(var(--destructive))"} 
+
+                      <Line
+                        type="monotone"
+                        dataKey="v"
+                        stroke={
+                          performance.change >= 0
+                            ? "hsl(var(--success))"
+                            : "hsl(var(--destructive))"
+                        }
                         strokeWidth={2}
                         dot={false}
                       />
@@ -200,12 +348,13 @@ export default function PortfolioPage() {
               <CardHeader>
                 <CardTitle>Sector Allocation</CardTitle>
               </CardHeader>
+
               <CardContent className="flex flex-col items-center">
                 <div className="h-[300px] w-full max-w-[300px]">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie
-                        data={allocation?.bySector || []}
+                        data={bySector}
                         cx="50%"
                         cy="50%"
                         innerRadius={60}
@@ -213,30 +362,58 @@ export default function PortfolioPage() {
                         paddingAngle={2}
                         dataKey="value"
                       >
-                        {allocation?.bySector.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        {bySector.map((entry, index) => (
+                          <Cell
+                            key={`sector-cell-${entry.label}-${index}`}
+                            fill={COLORS[index % COLORS.length]}
+                          />
                         ))}
                       </Pie>
-                      <RechartsTooltip 
+
+                      <RechartsTooltip
                         formatter={(value: number) => formatCurrency(value)}
-                        contentStyle={{ backgroundColor: 'hsl(var(--popover))', borderColor: 'hsl(var(--border))', borderRadius: '0.5rem' }}
+                        contentStyle={{
+                          backgroundColor: "hsl(var(--popover))",
+                          borderColor: "hsl(var(--border))",
+                          borderRadius: "0.5rem",
+                        }}
                       />
                     </PieChart>
                   </ResponsiveContainer>
                 </div>
+
                 <div className="w-full mt-4 space-y-2">
-                  {allocation?.bySector.map((item, i) => (
-                    <div key={item.label} className="flex items-center justify-between text-sm">
-                      <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[i % COLORS.length] }} />
-                        <span>{item.label}</span>
+                  {bySector.length === 0 ? (
+                    <p className="text-sm text-muted-foreground text-center">
+                      No sector allocation available.
+                    </p>
+                  ) : (
+                    bySector.map((item, i) => (
+                      <div
+                        key={item.label}
+                        className="flex items-center justify-between text-sm"
+                      >
+                        <div className="flex items-center gap-2">
+                          <div
+                            className="w-3 h-3 rounded-full"
+                            style={{
+                              backgroundColor: COLORS[i % COLORS.length],
+                            }}
+                          />
+                          <span>{item.label}</span>
+                        </div>
+
+                        <div className="flex gap-4">
+                          <span className="font-medium">
+                            {formatCurrency(item.value)}
+                          </span>
+                          <span className="text-muted-foreground w-12 text-right">
+                            {formatChange(item.percent, true)}
+                          </span>
+                        </div>
                       </div>
-                      <div className="flex gap-4">
-                        <span className="font-medium">{formatCurrency(item.value)}</span>
-                        <span className="text-muted-foreground w-12 text-right">{formatChange(item.percent, true)}</span>
-                      </div>
-                    </div>
-                  ))}
+                    ))
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -245,12 +422,13 @@ export default function PortfolioPage() {
               <CardHeader>
                 <CardTitle>Asset Allocation</CardTitle>
               </CardHeader>
+
               <CardContent className="flex flex-col items-center">
                 <div className="h-[300px] w-full max-w-[300px]">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie
-                        data={allocation?.byAsset || []}
+                        data={byAsset}
                         cx="50%"
                         cy="50%"
                         innerRadius={60}
@@ -258,30 +436,58 @@ export default function PortfolioPage() {
                         paddingAngle={2}
                         dataKey="value"
                       >
-                        {allocation?.byAsset.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        {byAsset.map((entry, index) => (
+                          <Cell
+                            key={`asset-cell-${entry.label}-${index}`}
+                            fill={COLORS[index % COLORS.length]}
+                          />
                         ))}
                       </Pie>
-                      <RechartsTooltip 
+
+                      <RechartsTooltip
                         formatter={(value: number) => formatCurrency(value)}
-                        contentStyle={{ backgroundColor: 'hsl(var(--popover))', borderColor: 'hsl(var(--border))', borderRadius: '0.5rem' }}
+                        contentStyle={{
+                          backgroundColor: "hsl(var(--popover))",
+                          borderColor: "hsl(var(--border))",
+                          borderRadius: "0.5rem",
+                        }}
                       />
                     </PieChart>
                   </ResponsiveContainer>
                 </div>
+
                 <div className="w-full mt-4 space-y-2">
-                  {allocation?.byAsset.map((item, i) => (
-                    <div key={item.label} className="flex items-center justify-between text-sm">
-                      <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[i % COLORS.length] }} />
-                        <span>{item.label}</span>
+                  {byAsset.length === 0 ? (
+                    <p className="text-sm text-muted-foreground text-center">
+                      No asset allocation available.
+                    </p>
+                  ) : (
+                    byAsset.map((item, i) => (
+                      <div
+                        key={item.label}
+                        className="flex items-center justify-between text-sm"
+                      >
+                        <div className="flex items-center gap-2">
+                          <div
+                            className="w-3 h-3 rounded-full"
+                            style={{
+                              backgroundColor: COLORS[i % COLORS.length],
+                            }}
+                          />
+                          <span>{item.label}</span>
+                        </div>
+
+                        <div className="flex gap-4">
+                          <span className="font-medium">
+                            {formatCurrency(item.value)}
+                          </span>
+                          <span className="text-muted-foreground w-12 text-right">
+                            {formatChange(item.percent, true)}
+                          </span>
+                        </div>
                       </div>
-                      <div className="flex gap-4">
-                        <span className="font-medium">{formatCurrency(item.value)}</span>
-                        <span className="text-muted-foreground w-12 text-right">{formatChange(item.percent, true)}</span>
-                      </div>
-                    </div>
-                  ))}
+                    ))
+                  )}
                 </div>
               </CardContent>
             </Card>

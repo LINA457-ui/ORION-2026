@@ -1,11 +1,37 @@
 import { useGetDashboardSummary } from "@workspace/api-client-react";
-import { formatCurrency, formatPercent, formatChange } from "@/lib/format";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { formatCurrency, formatChange } from "@/lib/format";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Area, AreaChart } from "recharts";
+import {
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip as RechartsTooltip,
+  ResponsiveContainer,
+  Area,
+  AreaChart,
+} from "recharts";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, ChevronUp, ChevronDown, Activity, Clock, Briefcase, ArrowDownRight, ArrowUpRight, Coins, Receipt, Banknote } from "lucide-react";
+import {
+  ArrowRight,
+  ChevronUp,
+  ChevronDown,
+  Activity,
+  Clock,
+  Briefcase,
+  ArrowDownRight,
+  ArrowUpRight,
+  Coins,
+  Receipt,
+  Banknote,
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 export default function DashboardPage() {
@@ -33,56 +59,114 @@ export default function DashboardPage() {
     return <div className="text-destructive">Failed to load dashboard.</div>;
   }
 
-  const { account, equityCurve, positions, watchlist, indices, movers, recentOrders, recentTransactions, news } = summary;
-  const isPositive = equityCurve.change >= 0;
+  const {
+    account,
+    equityCurve,
+    positions = [],
+    indices = [],
+    recentOrders = [],
+    recentTransactions = [],
+    news = [],
+  } = summary;
+
+  const safeAccount = account ?? {
+    displayName: "Investor",
+    totalEquity: 0,
+    dayChange: 0,
+    dayChangePercent: 0,
+    portfolioValue: 0,
+    cashBalance: 0,
+    buyingPower: 0,
+  };
+
+  const safeEquityCurve = equityCurve ?? {
+    change: 0,
+    range: "1D",
+    points: [],
+  };
+
+  const isPositive = safeEquityCurve.change >= 0;
 
   return (
     <div className="space-y-8 pb-8">
       <div>
-        <h1 className="text-3xl font-serif font-bold tracking-tight mb-1">Portfolio Summary</h1>
-        <p className="text-muted-foreground">Welcome back, {account.displayName}</p>
+        <h1 className="text-3xl font-serif font-bold tracking-tight mb-1">
+          Portfolio Summary
+        </h1>
+        <p className="text-muted-foreground">
+          Welcome back, {safeAccount.displayName}
+        </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Total Equity</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Total Equity
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{formatCurrency(account.totalEquity)}</div>
-            <p className={`text-sm font-medium mt-1 flex items-center gap-1 ${isPositive ? "text-success" : "text-destructive"}`}>
-              {isPositive ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-              {formatChange(account.dayChange)} ({formatChange(account.dayChangePercent, true)})
+            <div className="text-3xl font-bold">
+              {formatCurrency(safeAccount.totalEquity)}
+            </div>
+            <p
+              className={`text-sm font-medium mt-1 flex items-center gap-1 ${
+                isPositive ? "text-success" : "text-destructive"
+              }`}
+            >
+              {isPositive ? (
+                <ChevronUp className="w-4 h-4" />
+              ) : (
+                <ChevronDown className="w-4 h-4" />
+              )}
+              {formatChange(safeAccount.dayChange)} (
+              {formatChange(safeAccount.dayChangePercent, true)})
             </p>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Market Value</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Market Value
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(account.portfolioValue)}</div>
-            <p className="text-sm text-muted-foreground mt-1">Invested assets</p>
+            <div className="text-2xl font-bold">
+              {formatCurrency(safeAccount.portfolioValue)}
+            </div>
+            <p className="text-sm text-muted-foreground mt-1">
+              Invested assets
+            </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Cash Balance</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Cash Balance
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(account.cashBalance)}</div>
-            <p className="text-sm text-muted-foreground mt-1">Available to trade</p>
+            <div className="text-2xl font-bold">
+              {formatCurrency(safeAccount.cashBalance)}
+            </div>
+            <p className="text-sm text-muted-foreground mt-1">
+              Available to trade
+            </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Buying Power</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Buying Power
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(account.buyingPower)}</div>
+            <div className="text-2xl font-bold">
+              {formatCurrency(safeAccount.buyingPower)}
+            </div>
             <p className="text-sm text-muted-foreground mt-1">With margin</p>
           </CardContent>
         </Card>
@@ -93,7 +177,9 @@ export default function DashboardPage() {
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <div className="space-y-1">
               <CardTitle>Performance</CardTitle>
-              <CardDescription>Value over time ({equityCurve.range})</CardDescription>
+              <CardDescription>
+                Value over time ({safeEquityCurve.range})
+              </CardDescription>
             </div>
             <Button variant="outline" size="sm" asChild>
               <Link href="/portfolio">Full Details</Link>
@@ -102,28 +188,61 @@ export default function DashboardPage() {
           <CardContent>
             <div className="h-[300px] w-full mt-4">
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={equityCurve.points} margin={{ top: 5, right: 0, left: 0, bottom: 0 }}>
+                <AreaChart
+                  data={safeEquityCurve.points}
+                  margin={{ top: 5, right: 0, left: 0, bottom: 0 }}
+                >
                   <defs>
-                    <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor={`hsl(var(--${isPositive ? 'success' : 'destructive'}))`} stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor={`hsl(var(--${isPositive ? 'success' : 'destructive'}))`} stopOpacity={0}/>
+                    <linearGradient
+                      id="colorValue"
+                      x1="0"
+                      y1="0"
+                      x2="0"
+                      y2="1"
+                    >
+                      <stop
+                        offset="5%"
+                        stopColor={`hsl(var(--${
+                          isPositive ? "success" : "destructive"
+                        }))`}
+                        stopOpacity={0.3}
+                      />
+                      <stop
+                        offset="95%"
+                        stopColor={`hsl(var(--${
+                          isPositive ? "success" : "destructive"
+                        }))`}
+                        stopOpacity={0}
+                      />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
-                  <XAxis 
-                    dataKey="t" 
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    vertical={false}
+                    stroke="hsl(var(--border))"
+                  />
+                  <XAxis
+                    dataKey="t"
                     tickFormatter={(val) => {
                       const d = new Date(val);
-                      return equityCurve.range === '1D' ? `${d.getHours()}:${d.getMinutes().toString().padStart(2, '0')}` : d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-                    }} 
+                      return safeEquityCurve.range === "1D"
+                        ? `${d.getHours()}:${d
+                            .getMinutes()
+                            .toString()
+                            .padStart(2, "0")}`
+                        : d.toLocaleDateString(undefined, {
+                            month: "short",
+                            day: "numeric",
+                          });
+                    }}
                     stroke="hsl(var(--muted-foreground))"
                     fontSize={12}
                     tickLine={false}
                     axisLine={false}
                     minTickGap={30}
                   />
-                  <YAxis 
-                    domain={['auto', 'auto']}
+                  <YAxis
+                    domain={["auto", "auto"]}
                     tickFormatter={(val) => `$${val}`}
                     stroke="hsl(var(--muted-foreground))"
                     fontSize={12}
@@ -131,19 +250,34 @@ export default function DashboardPage() {
                     axisLine={false}
                     width={60}
                   />
-                  <RechartsTooltip 
-                    contentStyle={{ backgroundColor: 'hsl(var(--popover))', borderColor: 'hsl(var(--border))', borderRadius: '0.5rem', fontSize: '14px' }}
-                    itemStyle={{ color: 'hsl(var(--foreground))', fontWeight: 600 }}
-                    formatter={(value: number) => [formatCurrency(value), 'Value']}
-                    labelFormatter={(label) => new Date(label).toLocaleString()}
+                  <RechartsTooltip
+                    contentStyle={{
+                      backgroundColor: "hsl(var(--popover))",
+                      borderColor: "hsl(var(--border))",
+                      borderRadius: "0.5rem",
+                      fontSize: "14px",
+                    }}
+                    itemStyle={{
+                      color: "hsl(var(--foreground))",
+                      fontWeight: 600,
+                    }}
+                    formatter={(value: number) => [
+                      formatCurrency(value),
+                      "Value",
+                    ]}
+                    labelFormatter={(label) =>
+                      new Date(label).toLocaleString()
+                    }
                   />
-                  <Area 
-                    type="monotone" 
-                    dataKey="v" 
-                    stroke={`hsl(var(--${isPositive ? 'success' : 'destructive'}))`} 
+                  <Area
+                    type="monotone"
+                    dataKey="v"
+                    stroke={`hsl(var(--${
+                      isPositive ? "success" : "destructive"
+                    }))`}
                     strokeWidth={2}
-                    fillOpacity={1} 
-                    fill="url(#colorValue)" 
+                    fillOpacity={1}
+                    fill="url(#colorValue)"
                   />
                 </AreaChart>
               </ResponsiveContainer>
@@ -159,15 +293,33 @@ export default function DashboardPage() {
           <CardContent className="flex-1">
             {positions.length > 0 ? (
               <div className="space-y-4 mt-2">
-                {positions.slice(0, 5).map(pos => (
-                  <div key={pos.id} className="flex items-center justify-between">
+                {positions.slice(0, 5).map((pos) => (
+                  <div
+                    key={pos.id}
+                    className="flex items-center justify-between"
+                  >
                     <div>
-                      <Link href={`/markets/${pos.symbol}`} className="font-bold hover:underline">{pos.symbol}</Link>
-                      <div className="text-xs text-muted-foreground">{pos.quantity} shares</div>
+                      <Link
+                        href={`/markets/${pos.symbol}`}
+                        className="font-bold hover:underline"
+                      >
+                        {pos.symbol}
+                      </Link>
+                      <div className="text-xs text-muted-foreground">
+                        {pos.quantity} shares
+                      </div>
                     </div>
                     <div className="text-right">
-                      <div className="font-medium">{formatCurrency(pos.marketValue)}</div>
-                      <div className={`text-xs font-medium ${pos.dayChange >= 0 ? "text-success" : "text-destructive"}`}>
+                      <div className="font-medium">
+                        {formatCurrency(pos.marketValue)}
+                      </div>
+                      <div
+                        className={`text-xs font-medium ${
+                          pos.dayChange >= 0
+                            ? "text-success"
+                            : "text-destructive"
+                        }`}
+                      >
                         {formatChange(pos.dayChangePercent, true)}
                       </div>
                     </div>
@@ -186,7 +338,7 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
       </div>
-      
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -195,33 +347,66 @@ export default function DashboardPage() {
               <CardDescription>Latest trades on your account</CardDescription>
             </div>
             <Button variant="ghost" size="sm" asChild className="h-8">
-              <Link href="/portfolio">View all <ArrowRight className="ml-1 w-3 h-3" /></Link>
+              <Link href="/portfolio">
+                View all <ArrowRight className="ml-1 w-3 h-3" />
+              </Link>
             </Button>
           </CardHeader>
           <CardContent>
             {recentOrders.length > 0 ? (
               <div className="divide-y">
-                {recentOrders.slice(0, 5).map(o => {
+                {recentOrders.slice(0, 5).map((o) => {
                   const isBuy = o.side === "buy";
+
                   return (
-                    <div key={o.id} className="flex items-center justify-between py-3 first:pt-1">
+                    <div
+                      key={o.id}
+                      className="flex items-center justify-between py-3 first:pt-1"
+                    >
                       <div className="flex items-center gap-3">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${isBuy ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}>
-                          {isBuy ? <ArrowDownRight className="w-4 h-4" /> : <ArrowUpRight className="w-4 h-4" />}
+                        <div
+                          className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                            isBuy
+                              ? "bg-success/10 text-success"
+                              : "bg-destructive/10 text-destructive"
+                          }`}
+                        >
+                          {isBuy ? (
+                            <ArrowDownRight className="w-4 h-4" />
+                          ) : (
+                            <ArrowUpRight className="w-4 h-4" />
+                          )}
                         </div>
                         <div>
                           <div className="font-bold flex items-center gap-2">
-                            <span className="uppercase text-xs font-semibold tracking-wide">{o.side}</span>
-                            <Link href={`/markets/${o.symbol}`} className="hover:underline">{o.symbol}</Link>
+                            <span className="uppercase text-xs font-semibold tracking-wide">
+                              {o.side}
+                            </span>
+                            <Link
+                              href={`/markets/${o.symbol}`}
+                              className="hover:underline"
+                            >
+                              {o.symbol}
+                            </Link>
                           </div>
-                          <div className="text-xs text-muted-foreground">{o.quantity} shares @ {formatCurrency(o.price)}</div>
+                          <div className="text-xs text-muted-foreground">
+                            {o.quantity} shares @ {formatCurrency(o.price)}
+                          </div>
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className="font-medium">{formatCurrency(o.total)}</div>
+                        <div className="font-medium">
+                          {formatCurrency(o.total)}
+                        </div>
                         <div className="text-xs text-muted-foreground flex items-center gap-1 justify-end">
                           <Clock className="w-3 h-3" />
-                          {new Date(o.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                          {new Date(o.createdAt).toLocaleDateString(
+                            undefined,
+                            {
+                              month: "short",
+                              day: "numeric",
+                            }
+                          )}
                         </div>
                       </div>
                     </div>
@@ -244,32 +429,70 @@ export default function DashboardPage() {
               <CardDescription>Deposits, dividends and fees</CardDescription>
             </div>
             <Button variant="ghost" size="sm" asChild className="h-8">
-              <Link href="/transactions">View all <ArrowRight className="ml-1 w-3 h-3" /></Link>
+              <Link href="/transactions">
+                View all <ArrowRight className="ml-1 w-3 h-3" />
+              </Link>
             </Button>
           </CardHeader>
           <CardContent>
             {recentTransactions.length > 0 ? (
               <div className="divide-y">
-                {recentTransactions.slice(0, 5).map(t => {
-                  const isPositive = t.amount >= 0;
-                  const Icon = t.type === "deposit" ? Banknote : t.type === "dividend" ? Coins : t.type === "fee" ? Receipt : isPositive ? ArrowDownRight : ArrowUpRight;
+                {recentTransactions.slice(0, 5).map((t) => {
+                  const isTransactionPositive = t.amount >= 0;
+                  const Icon =
+                    t.type === "deposit"
+                      ? Banknote
+                      : t.type === "dividend"
+                        ? Coins
+                        : t.type === "fee"
+                          ? Receipt
+                          : isTransactionPositive
+                            ? ArrowDownRight
+                            : ArrowUpRight;
+
                   return (
-                    <div key={t.id} className="flex items-center justify-between py-3 first:pt-1">
+                    <div
+                      key={t.id}
+                      className="flex items-center justify-between py-3 first:pt-1"
+                    >
                       <div className="flex items-center gap-3">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${isPositive ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"}`}>
+                        <div
+                          className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                            isTransactionPositive
+                              ? "bg-success/10 text-success"
+                              : "bg-muted text-muted-foreground"
+                          }`}
+                        >
                           <Icon className="w-4 h-4" />
                         </div>
                         <div>
-                          <div className="font-medium text-sm capitalize">{t.type}</div>
-                          <div className="text-xs text-muted-foreground line-clamp-1">{t.description}</div>
+                          <div className="font-medium text-sm capitalize">
+                            {t.type}
+                          </div>
+                          <div className="text-xs text-muted-foreground line-clamp-1">
+                            {t.description}
+                          </div>
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className={`font-semibold ${isPositive ? "text-success" : "text-foreground"}`}>
-                          {isPositive ? "+" : ""}{formatCurrency(t.amount)}
+                        <div
+                          className={`font-semibold ${
+                            isTransactionPositive
+                              ? "text-success"
+                              : "text-foreground"
+                          }`}
+                        >
+                          {isTransactionPositive ? "+" : ""}
+                          {formatCurrency(t.amount)}
                         </div>
                         <div className="text-xs text-muted-foreground">
-                          {new Date(t.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                          {new Date(t.createdAt).toLocaleDateString(
+                            undefined,
+                            {
+                              month: "short",
+                              day: "numeric",
+                            }
+                          )}
                         </div>
                       </div>
                     </div>
@@ -293,20 +516,35 @@ export default function DashboardPage() {
               <CardTitle>Market Indices</CardTitle>
             </div>
             <Button variant="ghost" size="sm" asChild className="h-8">
-              <Link href="/markets">View all <ArrowRight className="ml-1 w-3 h-3" /></Link>
+              <Link href="/markets">
+                View all <ArrowRight className="ml-1 w-3 h-3" />
+              </Link>
             </Button>
           </CardHeader>
           <CardContent>
             <div className="divide-y">
-              {indices.map(idx => (
-                <div key={idx.symbol} className="flex items-center justify-between py-3 first:pt-1">
+              {indices.map((idx) => (
+                <div
+                  key={idx.symbol}
+                  className="flex items-center justify-between py-3 first:pt-1"
+                >
                   <div>
                     <div className="font-bold">{idx.name}</div>
-                    <div className="text-xs text-muted-foreground">{idx.symbol}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {idx.symbol}
+                    </div>
                   </div>
                   <div className="text-right">
-                    <div className="font-medium">{formatCurrency(idx.value)}</div>
-                    <div className={`text-sm font-medium ${idx.change >= 0 ? "text-success" : "text-destructive"}`}>
+                    <div className="font-medium">
+                      {formatCurrency(idx.value)}
+                    </div>
+                    <div
+                      className={`text-sm font-medium ${
+                        idx.change >= 0
+                          ? "text-success"
+                          : "text-destructive"
+                      }`}
+                    >
                       {formatChange(idx.changePercent, true)}
                     </div>
                   </div>
@@ -315,7 +553,7 @@ export default function DashboardPage() {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <div className="space-y-1">
@@ -324,19 +562,30 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {news.slice(0, 4).map(item => (
+              {news.slice(0, 4).map((item) => (
                 <div key={item.id} className="group">
                   <div className="text-xs text-muted-foreground mb-1 flex items-center gap-2">
-                    <span className="font-medium text-foreground">{item.source}</span>
+                    <span className="font-medium text-foreground">
+                      {item.source}
+                    </span>
                     <span>•</span>
-                    <span>{new Date(item.publishedAt).toLocaleDateString()}</span>
+                    <span>
+                      {new Date(item.publishedAt).toLocaleDateString()}
+                    </span>
                   </div>
-                  <a href="#" className="font-medium text-sm leading-snug group-hover:text-primary transition-colors line-clamp-2">
+                  <a
+                    href="#"
+                    className="font-medium text-sm leading-snug group-hover:text-primary transition-colors line-clamp-2"
+                  >
                     {item.headline}
                   </a>
                   <div className="flex gap-1 mt-2">
-                    {item.symbols.map(sym => (
-                      <Badge key={sym} variant="secondary" className="text-[10px] px-1.5 py-0">
+                    {(item.symbols ?? []).map((sym) => (
+                      <Badge
+                        key={sym}
+                        variant="secondary"
+                        className="text-[10px] px-1.5 py-0"
+                      >
                         {sym}
                       </Badge>
                     ))}
