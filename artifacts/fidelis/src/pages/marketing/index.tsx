@@ -45,10 +45,7 @@ export default function MarketingPage() {
         <div className="container max-w-6xl mx-auto px-4 text-center text-sm text-muted-foreground">
           <div className="flex justify-center mb-6 opacity-50 grayscale"><Logo /></div>
           <p className="mb-2">© {new Date().getFullYear()} Orion Investment. All rights reserved.</p>
-          <p className="max-w-2xl mx-auto text-xs">
-            Orion Investment is a simulated paper-trading application built for demonstration purposes. 
-            No real money is transacted. Not financial advice.
-          </p>
+          
         </div>
       </footer>
     </div>
