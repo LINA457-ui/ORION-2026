@@ -18,7 +18,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
 
 const DUMMY_TRANSACTIONS = [
   {
@@ -93,8 +92,15 @@ const DUMMY_TRANSACTIONS = [
   },
 ];
 
-function safeArray<T>(value: unknown, fallback: T[]): T[] {
-  return Array.isArray(value) && value.length > 0 ? (value as T[]) : fallback;
+function normalizeTransactions(data: any) {
+  if (Array.isArray(data) && data.length > 0) return data;
+  if (Array.isArray(data?.data) && data.data.length > 0) return data.data;
+  if (Array.isArray(data?.transactions) && data.transactions.length > 0) {
+    return data.transactions;
+  }
+  if (Array.isArray(data?.items) && data.items.length > 0) return data.items;
+
+  return DUMMY_TRANSACTIONS;
 }
 
 function safeNumber(value: unknown, fallback = 0) {
@@ -106,7 +112,7 @@ export default function TransactionsPage() {
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const { data, isLoading } = useListTransactions();
 
-  const transactions = safeArray(data, DUMMY_TRANSACTIONS);
+  const transactions = normalizeTransactions(data);
 
   const filtered = transactions.filter((t: any) => {
     return typeFilter === "all" || t.type === typeFilter;
@@ -182,24 +188,7 @@ export default function TransactionsPage() {
               </TableHeader>
 
               <TableBody>
-                {isLoading && transactions.length === 0 ? (
-                  Array.from({ length: 5 }).map((_, i) => (
-                    <TableRow key={i}>
-                      <TableCell className="pl-6">
-                        <Skeleton className="h-4 w-24" />
-                      </TableCell>
-                      <TableCell>
-                        <Skeleton className="h-6 w-16 rounded-full" />
-                      </TableCell>
-                      <TableCell>
-                        <Skeleton className="h-4 w-48" />
-                      </TableCell>
-                      <TableCell className="pr-6">
-                        <Skeleton className="h-4 w-20 ml-auto" />
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : !filtered.length ? (
+                {!filtered.length ? (
                   <TableRow>
                     <TableCell
                       colSpan={4}
@@ -214,7 +203,7 @@ export default function TransactionsPage() {
                     const isPositive = amount > 0;
 
                     return (
-                      <TableRow key={t.id}>
+                      <TableRow key={t.id || `${t.type}-${t.createdAt}`}>
                         <TableCell className="pl-6 text-muted-foreground whitespace-nowrap">
                           {formatDateTime(t.createdAt)}
                         </TableCell>
@@ -222,9 +211,11 @@ export default function TransactionsPage() {
                         <TableCell>
                           <Badge
                             variant="outline"
-                            className={`capitalize ${getBadgeColor(t.type)}`}
+                            className={`capitalize ${getBadgeColor(
+                              String(t.type || "")
+                            )}`}
                           >
-                            {t.type}
+                            {t.type || "transaction"}
                           </Badge>
                         </TableCell>
 

@@ -25,7 +25,7 @@ import {
 
 const DUMMY_SUMMARY = {
   account: {
-    displayName: "Shina Hustle",
+    displayName: "",
     totalEquity: 245680.75,
     dayChange: 3280.45,
     dayChangePercent: 1.36,
