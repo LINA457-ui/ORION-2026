@@ -179,7 +179,8 @@ const DUMMY_MOVERS = {
 const DUMMY_NEWS = [
   {
     id: "1",
-    headline: "Technology stocks push the market higher as investors return to growth names",
+    headline:
+      "Technology stocks push the market higher as investors return to growth names",
     summary:
       "Major technology companies led the broader market upward as traders focused on earnings strength and AI demand.",
     source: "MarketWatch",
@@ -209,15 +210,45 @@ const DUMMY_NEWS = [
   },
 ];
 
-function safeArray<T>(value: unknown, fallback: T[]): T[] {
-  return Array.isArray(value) && value.length > 0 ? (value as T[]) : fallback;
+function safeArray<T>(value: any, fallback: T[]): T[] {
+  if (Array.isArray(value) && value.length > 0) return value;
+  if (Array.isArray(value?.data) && value.data.length > 0) return value.data;
+  if (Array.isArray(value?.items) && value.items.length > 0) return value.items;
+  if (Array.isArray(value?.results) && value.results.length > 0) {
+    return value.results;
+  }
+  if (Array.isArray(value?.quotes) && value.quotes.length > 0) {
+    return value.quotes;
+  }
+  if (Array.isArray(value?.news) && value.news.length > 0) {
+    return value.news;
+  }
+
+  return fallback;
+}
+
+function safeNumber(value: unknown, fallback = 0) {
+  const num = Number(value);
+  return Number.isFinite(num) ? num : fallback;
 }
 
 function normalizeMovers(value: any) {
+  const source =
+    value && typeof value === "object"
+      ? {
+          ...value,
+          ...(value?.data || {}),
+          ...(value?.movers || {}),
+        }
+      : {};
+
   return {
-    gainers: safeArray(value?.gainers, DUMMY_MOVERS.gainers),
-    losers: safeArray(value?.losers, DUMMY_MOVERS.losers),
-    mostActive: safeArray(value?.mostActive, DUMMY_MOVERS.mostActive),
+    gainers: safeArray(source.gainers || source.topGainers, DUMMY_MOVERS.gainers),
+    losers: safeArray(source.losers || source.topLosers, DUMMY_MOVERS.losers),
+    mostActive: safeArray(
+      source.mostActive || source.active || source.most_active,
+      DUMMY_MOVERS.mostActive
+    ),
   };
 }
 
@@ -259,25 +290,25 @@ export default function MarketsPage() {
               <Skeleton key={i} className="h-24 w-full" />
             ))
           : indices.map((idx: any) => (
-              <Card key={idx.symbol}>
+              <Card key={idx.symbol || idx.name}>
                 <CardContent className="p-4">
                   <div className="text-sm font-bold text-muted-foreground mb-1">
-                    {idx.name}
+                    {idx.name || idx.symbol}
                   </div>
 
                   <div className="text-xl font-bold">
-                    {formatCurrency(Number(idx.value || 0))}
+                    {formatCurrency(safeNumber(idx.value || idx.price))}
                   </div>
 
                   <div
                     className={`text-sm font-medium ${
-                      Number(idx.change || 0) >= 0
+                      safeNumber(idx.change) >= 0
                         ? "text-success"
                         : "text-destructive"
                     }`}
                   >
-                    {formatChange(Number(idx.change || 0))} (
-                    {formatChange(Number(idx.changePercent || 0), true)})
+                    {formatChange(safeNumber(idx.change))} (
+                    {formatChange(safeNumber(idx.changePercent), true)})
                   </div>
                 </CardContent>
               </Card>
@@ -311,53 +342,57 @@ export default function MarketsPage() {
                   <TabsTrigger value="mostActive">Most Active</TabsTrigger>
                 </TabsList>
 
-                {["gainers", "losers", "mostActive"].map((tab) => (
-                  <TabsContent key={tab} value={tab} className="mt-0">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                      {loadingMovers && movers[tab as keyof typeof movers].length === 0
-                        ? Array.from({ length: 6 }).map((_, i) => (
-                            <Skeleton key={i} className="h-20 w-full" />
-                          ))
-                        : movers[tab as keyof typeof movers].map((quote: any) => (
-                            <Link
-                              key={quote.symbol}
-                              href={`/markets/${quote.symbol}`}
-                            >
-                              <div className="p-3 border rounded-lg hover:border-primary transition-colors bg-muted/20 cursor-pointer">
-                                <div className="flex justify-between items-start mb-2">
-                                  <span className="font-bold">
-                                    {quote.symbol}
-                                  </span>
+                {(["gainers", "losers", "mostActive"] as const).map((tab) => {
+                  const tabItems = safeArray(movers[tab], []);
 
-                                  <span className="font-medium">
-                                    {formatCurrency(Number(quote.price || 0))}
-                                  </span>
+                  return (
+                    <TabsContent key={tab} value={tab} className="mt-0">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                        {loadingMovers && tabItems.length === 0
+                          ? Array.from({ length: 6 }).map((_, i) => (
+                              <Skeleton key={i} className="h-20 w-full" />
+                            ))
+                          : tabItems.map((quote: any) => (
+                              <Link
+                                key={quote.symbol || quote.name}
+                                href={`/markets/${quote.symbol || ""}`}
+                              >
+                                <div className="p-3 border rounded-lg hover:border-primary transition-colors bg-muted/20 cursor-pointer">
+                                  <div className="flex justify-between items-start mb-2">
+                                    <span className="font-bold">
+                                      {quote.symbol || "—"}
+                                    </span>
+
+                                    <span className="font-medium">
+                                      {formatCurrency(safeNumber(quote.price))}
+                                    </span>
+                                  </div>
+
+                                  <div className="flex justify-between items-center text-sm">
+                                    <span className="text-muted-foreground truncate w-24">
+                                      {quote.name || "Market Asset"}
+                                    </span>
+
+                                    <span
+                                      className={
+                                        safeNumber(quote.change) >= 0
+                                          ? "text-success font-medium"
+                                          : "text-destructive font-medium"
+                                      }
+                                    >
+                                      {formatChange(
+                                        safeNumber(quote.changePercent),
+                                        true
+                                      )}
+                                    </span>
+                                  </div>
                                 </div>
-
-                                <div className="flex justify-between items-center text-sm">
-                                  <span className="text-muted-foreground truncate w-24">
-                                    {quote.name}
-                                  </span>
-
-                                  <span
-                                    className={
-                                      Number(quote.change || 0) >= 0
-                                        ? "text-success font-medium"
-                                        : "text-destructive font-medium"
-                                    }
-                                  >
-                                    {formatChange(
-                                      Number(quote.changePercent || 0),
-                                      true
-                                    )}
-                                  </span>
-                                </div>
-                              </div>
-                            </Link>
-                          ))}
-                    </div>
-                  </TabsContent>
-                ))}
+                              </Link>
+                            ))}
+                      </div>
+                    </TabsContent>
+                  );
+                })}
               </Tabs>
             </CardContent>
           </Card>
@@ -426,18 +461,20 @@ export default function MarketsPage() {
                     ) : (
                       filteredQuotes.map((quote: any) => (
                         <TableRow
-                          key={quote.symbol}
+                          key={quote.symbol || quote.name}
                           className="cursor-pointer hover:bg-muted/50"
-                          onClick={() =>
-                            (window.location.href = `/markets/${quote.symbol}`)
-                          }
+                          onClick={() => {
+                            if (quote.symbol) {
+                              window.location.href = `/markets/${quote.symbol}`;
+                            }
+                          }}
                         >
                           <TableCell className="font-bold text-primary">
-                            {quote.symbol}
+                            {quote.symbol || "—"}
                           </TableCell>
 
                           <TableCell className="font-medium text-muted-foreground">
-                            {quote.name}
+                            {quote.name || "Market Asset"}
                           </TableCell>
 
                           <TableCell>
@@ -450,19 +487,24 @@ export default function MarketsPage() {
                           </TableCell>
 
                           <TableCell className="text-right font-medium">
-                            {formatCurrency(Number(quote.price || 0))}
+                            {formatCurrency(safeNumber(quote.price))}
                           </TableCell>
 
                           <TableCell
                             className={`text-right font-medium ${
-                              Number(quote.change || 0) >= 0
+                              safeNumber(quote.change) >= 0
                                 ? "text-success"
                                 : "text-destructive"
                             }`}
                           >
-                            {formatChange(Number(quote.change || 0))}{" "}
+                            {formatChange(safeNumber(quote.change))}{" "}
                             <span className="text-xs">
-                              ({formatChange(Number(quote.changePercent || 0), true)})
+                              (
+                              {formatChange(
+                                safeNumber(quote.changePercent),
+                                true
+                              )}
+                              )
                             </span>
                           </TableCell>
                         </TableRow>
@@ -488,15 +530,15 @@ export default function MarketsPage() {
                       <Skeleton key={i} className="h-28 w-full" />
                     ))
                   : news.map((item: any) => {
-                      const symbols = Array.isArray(item.symbols)
-                        ? item.symbols
-                        : [];
+                      const symbols = safeArray(item?.symbols, []);
 
                       return (
                         <a
-                          key={item.id || item.headline}
+                          key={item.id || item.headline || item.title}
                           href={item.url || "#"}
-                          target={item.url && item.url !== "#" ? "_blank" : undefined}
+                          target={
+                            item.url && item.url !== "#" ? "_blank" : undefined
+                          }
                           rel="noreferrer"
                           className="block border-b pb-4 last:border-0 last:pb-0 hover:opacity-80 transition"
                         >
@@ -513,14 +555,16 @@ export default function MarketsPage() {
                           </div>
 
                           <h4 className="font-bold leading-snug mb-2">
-                            {item.headline || item.title}
+                            {item.headline || item.title || "Market update"}
                           </h4>
 
                           <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
-                            {item.summary || item.description || "Latest market update."}
+                            {item.summary ||
+                              item.description ||
+                              "Latest market update."}
                           </p>
 
-                          {symbols.length > 0 && (
+                          {symbols.length > 0 ? (
                             <div className="flex flex-wrap gap-1">
                               {symbols.map((sym: string) => (
                                 <Badge
@@ -532,7 +576,7 @@ export default function MarketsPage() {
                                 </Badge>
                               ))}
                             </div>
-                          )}
+                          ) : null}
                         </a>
                       );
                     })}

@@ -12,7 +12,6 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -130,8 +129,18 @@ const DUMMY_PERFORMANCE = {
   ],
 };
 
-function safeArray<T>(value: unknown, fallback: T[]): T[] {
-  return Array.isArray(value) && value.length > 0 ? (value as T[]) : fallback;
+function safeArray<T>(value: any, fallback: T[]): T[] {
+  if (Array.isArray(value) && value.length > 0) return value;
+  if (Array.isArray(value?.data) && value.data.length > 0) return value.data;
+  if (Array.isArray(value?.positions) && value.positions.length > 0) {
+    return value.positions;
+  }
+  if (Array.isArray(value?.items) && value.items.length > 0) return value.items;
+  if (Array.isArray(value?.results) && value.results.length > 0) {
+    return value.results;
+  }
+
+  return fallback;
 }
 
 function safeNumber(value: unknown, fallback = 0) {
@@ -157,41 +166,48 @@ export default function PortfolioPage() {
       : DUMMY_ALLOCATION;
 
   const bySector = safeArray(
-    (allocation as any)?.bySector,
+    (allocation as any)?.bySector ||
+      (allocation as any)?.data?.bySector ||
+      (allocation as any)?.allocation?.bySector,
     DUMMY_ALLOCATION.bySector
   );
 
   const byAsset = safeArray(
-    (allocation as any)?.byAsset,
+    (allocation as any)?.byAsset ||
+      (allocation as any)?.data?.byAsset ||
+      (allocation as any)?.allocation?.byAsset,
     DUMMY_ALLOCATION.byAsset
   );
 
-  const performance =
+  const performanceObject =
     performanceData && typeof performanceData === "object"
       ? {
           ...DUMMY_PERFORMANCE,
           ...(performanceData as any),
-          points: safeArray(
-            (performanceData as any)?.points,
-            DUMMY_PERFORMANCE.points
-          ),
+          ...(performanceData as any)?.data,
         }
       : DUMMY_PERFORMANCE;
 
   const performancePoints = safeArray(
-    performance.points,
+    (performanceObject as any)?.points ||
+      (performanceObject as any)?.data?.points ||
+      (performanceObject as any)?.performance?.points,
     DUMMY_PERFORMANCE.points
   );
 
-  const totalMarketValue = positions.reduce(
-    (acc: number, pos: any) => acc + safeNumber(pos.marketValue),
-    0
-  );
+  const totalMarketValue = Array.isArray(positions)
+    ? positions.reduce(
+        (acc: number, pos: any) => acc + safeNumber(pos.marketValue),
+        0
+      )
+    : 0;
 
-  const totalUnrealizedPnl = positions.reduce(
-    (acc: number, pos: any) => acc + safeNumber(pos.unrealizedPnl),
-    0
-  );
+  const totalUnrealizedPnl = Array.isArray(positions)
+    ? positions.reduce(
+        (acc: number, pos: any) => acc + safeNumber(pos.unrealizedPnl),
+        0
+      )
+    : 0;
 
   const isLoading = loadingPos || loadingAlloc || loadingPerf;
 
@@ -355,14 +371,15 @@ export default function PortfolioPage() {
                 <CardDescription>
                   <span
                     className={
-                      safeNumber(performance.change) >= 0
+                      safeNumber((performanceObject as any).change) >= 0
                         ? "text-success font-medium"
                         : "text-destructive font-medium"
                     }
                   >
-                    {formatChange(safeNumber(performance.change))} (
+                    {formatChange(safeNumber((performanceObject as any).change))}{" "}
+                    (
                     {formatChange(
-                      safeNumber(performance.changePercent),
+                      safeNumber((performanceObject as any).changePercent),
                       true
                     )}
                     )
@@ -423,7 +440,9 @@ export default function PortfolioPage() {
 
                     <YAxis
                       domain={["auto", "auto"]}
-                      tickFormatter={(val) => `$${Number(val).toLocaleString()}`}
+                      tickFormatter={(val) =>
+                        `$${Number(val).toLocaleString()}`
+                      }
                       stroke="hsl(var(--muted-foreground))"
                       fontSize={12}
                       tickLine={false}
@@ -450,7 +469,7 @@ export default function PortfolioPage() {
                       type="monotone"
                       dataKey="v"
                       stroke={
-                        safeNumber(performance.change) >= 0
+                        safeNumber((performanceObject as any).change) >= 0
                           ? "hsl(var(--success))"
                           : "hsl(var(--destructive))"
                       }

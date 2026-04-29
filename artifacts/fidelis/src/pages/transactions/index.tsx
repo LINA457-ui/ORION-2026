@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useListTransactions } from "@workspace/api-client-react";
 import { formatCurrency, formatDateTime } from "@/lib/format";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -92,15 +92,17 @@ const DUMMY_TRANSACTIONS = [
   },
 ];
 
-function normalizeTransactions(data: any) {
-  if (Array.isArray(data) && data.length > 0) return data;
-  if (Array.isArray(data?.data) && data.data.length > 0) return data.data;
-  if (Array.isArray(data?.transactions) && data.transactions.length > 0) {
-    return data.transactions;
+function toArray(value: any): any[] {
+  if (Array.isArray(value)) return value;
+  if (Array.isArray(value?.data)) return value.data;
+  if (Array.isArray(value?.transactions)) return value.transactions;
+  if (Array.isArray(value?.items)) return value.items;
+  if (Array.isArray(value?.results)) return value.results;
+  if (Array.isArray(value?.account?.transactions)) {
+    return value.account.transactions;
   }
-  if (Array.isArray(data?.items) && data.items.length > 0) return data.items;
 
-  return DUMMY_TRANSACTIONS;
+  return [];
 }
 
 function safeNumber(value: unknown, fallback = 0) {
@@ -109,14 +111,21 @@ function safeNumber(value: unknown, fallback = 0) {
 }
 
 export default function TransactionsPage() {
-  const [typeFilter, setTypeFilter] = useState<string>("all");
+  const [typeFilter, setTypeFilter] = useState("all");
   const { data, isLoading } = useListTransactions();
 
-  const transactions = normalizeTransactions(data);
+  const transactions = useMemo(() => {
+    const liveTransactions = toArray(data);
+    return liveTransactions.length > 0 ? liveTransactions : DUMMY_TRANSACTIONS;
+  }, [data]);
 
-  const filtered = transactions.filter((t: any) => {
-    return typeFilter === "all" || t.type === typeFilter;
-  });
+  const filtered = useMemo(() => {
+    const list = Array.isArray(transactions) ? transactions : [];
+
+    return list.filter((t: any) => {
+      return typeFilter === "all" || String(t.type) === typeFilter;
+    });
+  }, [transactions, typeFilter]);
 
   const getBadgeColor = (type: string) => {
     switch (type) {
@@ -188,7 +197,7 @@ export default function TransactionsPage() {
               </TableHeader>
 
               <TableBody>
-                {!filtered.length ? (
+                {filtered.length === 0 ? (
                   <TableRow>
                     <TableCell
                       colSpan={4}
@@ -198,24 +207,23 @@ export default function TransactionsPage() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filtered.map((t: any) => {
+                  filtered.map((t: any, index: number) => {
                     const amount = safeNumber(t.amount);
+                    const type = String(t.type || "transaction");
                     const isPositive = amount > 0;
 
                     return (
-                      <TableRow key={t.id || `${t.type}-${t.createdAt}`}>
+                      <TableRow key={t.id || `${type}-${t.createdAt}-${index}`}>
                         <TableCell className="pl-6 text-muted-foreground whitespace-nowrap">
-                          {formatDateTime(t.createdAt)}
+                          {t.createdAt ? formatDateTime(t.createdAt) : "—"}
                         </TableCell>
 
                         <TableCell>
                           <Badge
                             variant="outline"
-                            className={`capitalize ${getBadgeColor(
-                              String(t.type || "")
-                            )}`}
+                            className={`capitalize ${getBadgeColor(type)}`}
                           >
-                            {t.type || "transaction"}
+                            {type}
                           </Badge>
                         </TableCell>
 
