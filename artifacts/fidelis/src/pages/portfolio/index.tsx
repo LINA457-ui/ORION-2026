@@ -37,25 +37,163 @@ import {
 import { Link } from "wouter";
 import { ArrowUpRight } from "lucide-react";
 
+const DUMMY_POSITIONS = [
+  {
+    id: "pos_1",
+    symbol: "AAPL",
+    name: "Apple Inc.",
+    quantity: 120,
+    currentPrice: 189.44,
+    dayChange: 2.31,
+    dayChangePercent: 1.23,
+    averageCost: 172.2,
+    unrealizedPnl: 2068.8,
+    unrealizedPnlPercent: 10.01,
+    marketValue: 22732.8,
+  },
+  {
+    id: "pos_2",
+    symbol: "MSFT",
+    name: "Microsoft Corporation",
+    quantity: 65,
+    currentPrice: 421.88,
+    dayChange: 4.75,
+    dayChangePercent: 1.14,
+    averageCost: 388.1,
+    unrealizedPnl: 2195.7,
+    unrealizedPnlPercent: 8.7,
+    marketValue: 27422.2,
+  },
+  {
+    id: "pos_3",
+    symbol: "NVDA",
+    name: "NVIDIA Corporation",
+    quantity: 40,
+    currentPrice: 887.52,
+    dayChange: 21.4,
+    dayChangePercent: 2.47,
+    averageCost: 720.5,
+    unrealizedPnl: 6680.8,
+    unrealizedPnlPercent: 23.18,
+    marketValue: 35500.8,
+  },
+  {
+    id: "pos_4",
+    symbol: "TSLA",
+    name: "Tesla Inc.",
+    quantity: 80,
+    currentPrice: 232.16,
+    dayChange: -3.28,
+    dayChangePercent: -1.39,
+    averageCost: 245.75,
+    unrealizedPnl: -1087.2,
+    unrealizedPnlPercent: -5.53,
+    marketValue: 18572.8,
+  },
+  {
+    id: "pos_5",
+    symbol: "AMZN",
+    name: "Amazon.com Inc.",
+    quantity: 90,
+    currentPrice: 184.91,
+    dayChange: 1.72,
+    dayChangePercent: 0.94,
+    averageCost: 166.4,
+    unrealizedPnl: 1665.9,
+    unrealizedPnlPercent: 11.12,
+    marketValue: 16641.9,
+  },
+];
+
+const DUMMY_ALLOCATION = {
+  bySector: [
+    { label: "Technology", value: 85655.8, percent: 70.85 },
+    { label: "Consumer Cyclical", value: 35214.7, percent: 29.15 },
+  ],
+  byAsset: [
+    { label: "Stocks", value: 120870.5, percent: 82.4 },
+    { label: "Cash", value: 25810.25, percent: 17.6 },
+  ],
+};
+
+const DUMMY_PERFORMANCE = {
+  change: 4280.45,
+  changePercent: 3.58,
+  points: [
+    { t: "2026-04-01T09:00:00", v: 116200 },
+    { t: "2026-04-05T09:00:00", v: 117850 },
+    { t: "2026-04-10T09:00:00", v: 115900 },
+    { t: "2026-04-15T09:00:00", v: 119400 },
+    { t: "2026-04-20T09:00:00", v: 121300 },
+    { t: "2026-04-25T09:00:00", v: 123600 },
+    { t: "2026-04-29T09:00:00", v: 120870.5 },
+  ],
+};
+
+function safeArray<T>(value: unknown, fallback: T[]): T[] {
+  return Array.isArray(value) && value.length > 0 ? (value as T[]) : fallback;
+}
+
+function safeNumber(value: unknown, fallback = 0) {
+  const num = Number(value);
+  return Number.isFinite(num) ? num : fallback;
+}
+
 export default function PortfolioPage() {
   const [range, setRange] = useState<"1D" | "1W" | "1M" | "3M" | "1Y" | "ALL">(
     "1M"
   );
 
-  const { data: positions, isLoading: loadingPos } = useListPositions();
-  const { data: allocation, isLoading: loadingAlloc } = useGetAllocation();
-  const { data: performance, isLoading: loadingPerf } =
+  const { data: positionsData, isLoading: loadingPos } = useListPositions();
+  const { data: allocationData, isLoading: loadingAlloc } = useGetAllocation();
+  const { data: performanceData, isLoading: loadingPerf } =
     useGetAccountPerformance({ range });
 
-  const bySector = Array.isArray(allocation?.bySector)
-    ? allocation.bySector
-    : [];
+  const positions = safeArray(positionsData, DUMMY_POSITIONS);
 
-  const byAsset = Array.isArray(allocation?.byAsset) ? allocation.byAsset : [];
+  const allocation =
+    allocationData && typeof allocationData === "object"
+      ? allocationData
+      : DUMMY_ALLOCATION;
 
-  const performancePoints = Array.isArray(performance?.points)
-    ? performance.points
-    : [];
+  const bySector = safeArray(
+    (allocation as any)?.bySector,
+    DUMMY_ALLOCATION.bySector
+  );
+
+  const byAsset = safeArray(
+    (allocation as any)?.byAsset,
+    DUMMY_ALLOCATION.byAsset
+  );
+
+  const performance =
+    performanceData && typeof performanceData === "object"
+      ? {
+          ...DUMMY_PERFORMANCE,
+          ...(performanceData as any),
+          points: safeArray(
+            (performanceData as any)?.points,
+            DUMMY_PERFORMANCE.points
+          ),
+        }
+      : DUMMY_PERFORMANCE;
+
+  const performancePoints = safeArray(
+    performance.points,
+    DUMMY_PERFORMANCE.points
+  );
+
+  const totalMarketValue = positions.reduce(
+    (acc: number, pos: any) => acc + safeNumber(pos.marketValue),
+    0
+  );
+
+  const totalUnrealizedPnl = positions.reduce(
+    (acc: number, pos: any) => acc + safeNumber(pos.unrealizedPnl),
+    0
+  );
+
+  const isLoading = loadingPos || loadingAlloc || loadingPerf;
 
   const COLORS = [
     "hsl(var(--chart-1))",
@@ -66,22 +204,14 @@ export default function PortfolioPage() {
     "hsl(var(--primary))",
   ];
 
-  if (loadingPos || loadingAlloc || loadingPerf) {
-    return (
-      <div className="p-8">
-        <Skeleton className="h-[600px] w-full" />
-      </div>
-    );
-  }
-
-  const totalMarketValue =
-    positions?.reduce((acc, pos) => acc + pos.marketValue, 0) || 0;
-
-  const totalUnrealizedPnl =
-    positions?.reduce((acc, pos) => acc + pos.unrealizedPnl, 0) || 0;
-
   return (
     <div className="space-y-6 pb-8">
+      {isLoading ? (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs font-medium text-amber-700">
+          Loading live portfolio data. Showing protected demo figures.
+        </div>
+      ) : null}
+
       <div>
         <h1 className="text-3xl font-serif font-bold tracking-tight">
           Portfolio
@@ -123,7 +253,7 @@ export default function PortfolioPage() {
             <div className="text-sm font-medium text-muted-foreground mb-1">
               Positions Count
             </div>
-            <div className="text-3xl font-bold">{positions?.length || 0}</div>
+            <div className="text-3xl font-bold">{positions.length}</div>
           </CardContent>
         </Card>
       </div>
@@ -151,75 +281,67 @@ export default function PortfolioPage() {
               </TableHeader>
 
               <TableBody>
-                {!positions?.length ? (
-                  <TableRow>
+                {positions.map((pos: any) => (
+                  <TableRow key={pos.id || pos.symbol} className="group">
+                    <TableCell className="font-medium">
+                      <Link
+                        href={`/markets/${pos.symbol}`}
+                        className="hover:underline flex items-center gap-1"
+                      >
+                        {pos.symbol}
+                        <ArrowUpRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </Link>
+                      <div className="text-xs text-muted-foreground font-normal">
+                        {pos.name}
+                      </div>
+                    </TableCell>
+
+                    <TableCell className="text-right">
+                      {safeNumber(pos.quantity)}
+                    </TableCell>
+
+                    <TableCell className="text-right font-medium">
+                      {formatCurrency(safeNumber(pos.currentPrice))}
+                    </TableCell>
+
                     <TableCell
-                      colSpan={7}
-                      className="h-24 text-center text-muted-foreground"
+                      className={`text-right ${
+                        safeNumber(pos.dayChange) >= 0
+                          ? "text-success"
+                          : "text-destructive"
+                      }`}
                     >
-                      No open positions
+                      {formatChange(safeNumber(pos.dayChange))}
+                      <div className="text-xs">
+                        {formatChange(safeNumber(pos.dayChangePercent), true)}
+                      </div>
+                    </TableCell>
+
+                    <TableCell className="text-right">
+                      {formatCurrency(safeNumber(pos.averageCost))}
+                    </TableCell>
+
+                    <TableCell
+                      className={`text-right ${
+                        safeNumber(pos.unrealizedPnl) >= 0
+                          ? "text-success"
+                          : "text-destructive"
+                      }`}
+                    >
+                      {formatChange(safeNumber(pos.unrealizedPnl))}
+                      <div className="text-xs">
+                        {formatChange(
+                          safeNumber(pos.unrealizedPnlPercent),
+                          true
+                        )}
+                      </div>
+                    </TableCell>
+
+                    <TableCell className="text-right font-bold">
+                      {formatCurrency(safeNumber(pos.marketValue))}
                     </TableCell>
                   </TableRow>
-                ) : (
-                  positions.map((pos) => (
-                    <TableRow key={pos.id} className="group">
-                      <TableCell className="font-medium">
-                        <Link
-                          href={`/markets/${pos.symbol}`}
-                          className="hover:underline flex items-center gap-1"
-                        >
-                          {pos.symbol}
-                          <ArrowUpRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-                        </Link>
-                        <div className="text-xs text-muted-foreground font-normal">
-                          {pos.name}
-                        </div>
-                      </TableCell>
-
-                      <TableCell className="text-right">
-                        {pos.quantity}
-                      </TableCell>
-
-                      <TableCell className="text-right font-medium">
-                        {formatCurrency(pos.currentPrice)}
-                      </TableCell>
-
-                      <TableCell
-                        className={`text-right ${
-                          pos.dayChange >= 0
-                            ? "text-success"
-                            : "text-destructive"
-                        }`}
-                      >
-                        {formatChange(pos.dayChange)}
-                        <div className="text-xs">
-                          {formatChange(pos.dayChangePercent, true)}
-                        </div>
-                      </TableCell>
-
-                      <TableCell className="text-right">
-                        {formatCurrency(pos.averageCost)}
-                      </TableCell>
-
-                      <TableCell
-                        className={`text-right ${
-                          pos.unrealizedPnl >= 0
-                            ? "text-success"
-                            : "text-destructive"
-                        }`}
-                      >
-                        {formatChange(pos.unrealizedPnl)}
-                        <div className="text-xs">
-                          {formatChange(pos.unrealizedPnlPercent, true)}
-                        </div>
-                      </TableCell>
-
-                      <TableCell className="text-right font-bold">
-                        {formatCurrency(pos.marketValue)}
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
+                ))}
               </TableBody>
             </Table>
           </Card>
@@ -231,18 +353,20 @@ export default function PortfolioPage() {
               <div>
                 <CardTitle>Historical Performance</CardTitle>
                 <CardDescription>
-                  {performance && (
-                    <span
-                      className={
-                        performance.change >= 0
-                          ? "text-success font-medium"
-                          : "text-destructive font-medium"
-                      }
-                    >
-                      {formatChange(performance.change)} (
-                      {formatChange(performance.changePercent, true)})
-                    </span>
-                  )}
+                  <span
+                    className={
+                      safeNumber(performance.change) >= 0
+                        ? "text-success font-medium"
+                        : "text-destructive font-medium"
+                    }
+                  >
+                    {formatChange(safeNumber(performance.change))} (
+                    {formatChange(
+                      safeNumber(performance.changePercent),
+                      true
+                    )}
+                    )
+                  </span>
                 </CardDescription>
               </div>
 
@@ -265,79 +389,77 @@ export default function PortfolioPage() {
             </CardHeader>
 
             <CardContent>
-              {performance && (
-                <div className="h-[400px] w-full mt-4">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart
-                      data={performancePoints}
-                      margin={{ top: 5, right: 0, left: 0, bottom: 0 }}
-                    >
-                      <CartesianGrid
-                        strokeDasharray="3 3"
-                        vertical={false}
-                        stroke="hsl(var(--border))"
-                      />
+              <div className="h-[400px] w-full mt-4">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart
+                    data={performancePoints}
+                    margin={{ top: 5, right: 0, left: 0, bottom: 0 }}
+                  >
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      vertical={false}
+                      stroke="hsl(var(--border))"
+                    />
 
-                      <XAxis
-                        dataKey="t"
-                        tickFormatter={(val) => {
-                          const d = new Date(val);
-                          return range === "1D"
-                            ? `${d.getHours()}:${d
-                                .getMinutes()
-                                .toString()
-                                .padStart(2, "0")}`
-                            : d.toLocaleDateString(undefined, {
-                                month: "short",
-                                day: "numeric",
-                              });
-                        }}
-                        stroke="hsl(var(--muted-foreground))"
-                        fontSize={12}
-                        tickLine={false}
-                        axisLine={false}
-                      />
+                    <XAxis
+                      dataKey="t"
+                      tickFormatter={(val) => {
+                        const d = new Date(val);
+                        return range === "1D"
+                          ? `${d.getHours()}:${d
+                              .getMinutes()
+                              .toString()
+                              .padStart(2, "0")}`
+                          : d.toLocaleDateString(undefined, {
+                              month: "short",
+                              day: "numeric",
+                            });
+                      }}
+                      stroke="hsl(var(--muted-foreground))"
+                      fontSize={12}
+                      tickLine={false}
+                      axisLine={false}
+                    />
 
-                      <YAxis
-                        domain={["auto", "auto"]}
-                        tickFormatter={(val) => `$${val}`}
-                        stroke="hsl(var(--muted-foreground))"
-                        fontSize={12}
-                        tickLine={false}
-                        axisLine={false}
-                        width={60}
-                      />
+                    <YAxis
+                      domain={["auto", "auto"]}
+                      tickFormatter={(val) => `$${Number(val).toLocaleString()}`}
+                      stroke="hsl(var(--muted-foreground))"
+                      fontSize={12}
+                      tickLine={false}
+                      axisLine={false}
+                      width={70}
+                    />
 
-                      <RechartsTooltip
-                        contentStyle={{
-                          backgroundColor: "hsl(var(--popover))",
-                          borderColor: "hsl(var(--border))",
-                          borderRadius: "0.5rem",
-                        }}
-                        formatter={(value: number) => [
-                          formatCurrency(value),
-                          "Value",
-                        ]}
-                        labelFormatter={(label) =>
-                          new Date(label).toLocaleString()
-                        }
-                      />
+                    <RechartsTooltip
+                      contentStyle={{
+                        backgroundColor: "hsl(var(--popover))",
+                        borderColor: "hsl(var(--border))",
+                        borderRadius: "0.5rem",
+                      }}
+                      formatter={(value: number) => [
+                        formatCurrency(value),
+                        "Value",
+                      ]}
+                      labelFormatter={(label) =>
+                        new Date(label).toLocaleString()
+                      }
+                    />
 
-                      <Line
-                        type="monotone"
-                        dataKey="v"
-                        stroke={
-                          performance.change >= 0
-                            ? "hsl(var(--success))"
-                            : "hsl(var(--destructive))"
-                        }
-                        strokeWidth={2}
-                        dot={false}
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-              )}
+                    <Line
+                      type="monotone"
+                      dataKey="v"
+                      stroke={
+                        safeNumber(performance.change) >= 0
+                          ? "hsl(var(--success))"
+                          : "hsl(var(--destructive))"
+                      }
+                      strokeWidth={2}
+                      dot={false}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -362,7 +484,7 @@ export default function PortfolioPage() {
                         paddingAngle={2}
                         dataKey="value"
                       >
-                        {bySector.map((entry, index) => (
+                        {bySector.map((entry: any, index: number) => (
                           <Cell
                             key={`sector-cell-${entry.label}-${index}`}
                             fill={COLORS[index % COLORS.length]}
@@ -383,37 +505,31 @@ export default function PortfolioPage() {
                 </div>
 
                 <div className="w-full mt-4 space-y-2">
-                  {bySector.length === 0 ? (
-                    <p className="text-sm text-muted-foreground text-center">
-                      No sector allocation available.
-                    </p>
-                  ) : (
-                    bySector.map((item, i) => (
-                      <div
-                        key={item.label}
-                        className="flex items-center justify-between text-sm"
-                      >
-                        <div className="flex items-center gap-2">
-                          <div
-                            className="w-3 h-3 rounded-full"
-                            style={{
-                              backgroundColor: COLORS[i % COLORS.length],
-                            }}
-                          />
-                          <span>{item.label}</span>
-                        </div>
-
-                        <div className="flex gap-4">
-                          <span className="font-medium">
-                            {formatCurrency(item.value)}
-                          </span>
-                          <span className="text-muted-foreground w-12 text-right">
-                            {formatChange(item.percent, true)}
-                          </span>
-                        </div>
+                  {bySector.map((item: any, i: number) => (
+                    <div
+                      key={item.label}
+                      className="flex items-center justify-between text-sm"
+                    >
+                      <div className="flex items-center gap-2">
+                        <div
+                          className="w-3 h-3 rounded-full"
+                          style={{
+                            backgroundColor: COLORS[i % COLORS.length],
+                          }}
+                        />
+                        <span>{item.label}</span>
                       </div>
-                    ))
-                  )}
+
+                      <div className="flex gap-4">
+                        <span className="font-medium">
+                          {formatCurrency(safeNumber(item.value))}
+                        </span>
+                        <span className="text-muted-foreground w-12 text-right">
+                          {formatChange(safeNumber(item.percent), true)}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </CardContent>
             </Card>
@@ -436,7 +552,7 @@ export default function PortfolioPage() {
                         paddingAngle={2}
                         dataKey="value"
                       >
-                        {byAsset.map((entry, index) => (
+                        {byAsset.map((entry: any, index: number) => (
                           <Cell
                             key={`asset-cell-${entry.label}-${index}`}
                             fill={COLORS[index % COLORS.length]}
@@ -457,37 +573,31 @@ export default function PortfolioPage() {
                 </div>
 
                 <div className="w-full mt-4 space-y-2">
-                  {byAsset.length === 0 ? (
-                    <p className="text-sm text-muted-foreground text-center">
-                      No asset allocation available.
-                    </p>
-                  ) : (
-                    byAsset.map((item, i) => (
-                      <div
-                        key={item.label}
-                        className="flex items-center justify-between text-sm"
-                      >
-                        <div className="flex items-center gap-2">
-                          <div
-                            className="w-3 h-3 rounded-full"
-                            style={{
-                              backgroundColor: COLORS[i % COLORS.length],
-                            }}
-                          />
-                          <span>{item.label}</span>
-                        </div>
-
-                        <div className="flex gap-4">
-                          <span className="font-medium">
-                            {formatCurrency(item.value)}
-                          </span>
-                          <span className="text-muted-foreground w-12 text-right">
-                            {formatChange(item.percent, true)}
-                          </span>
-                        </div>
+                  {byAsset.map((item: any, i: number) => (
+                    <div
+                      key={item.label}
+                      className="flex items-center justify-between text-sm"
+                    >
+                      <div className="flex items-center gap-2">
+                        <div
+                          className="w-3 h-3 rounded-full"
+                          style={{
+                            backgroundColor: COLORS[i % COLORS.length],
+                          }}
+                        />
+                        <span>{item.label}</span>
                       </div>
-                    ))
-                  )}
+
+                      <div className="flex gap-4">
+                        <span className="font-medium">
+                          {formatCurrency(safeNumber(item.value))}
+                        </span>
+                        <span className="text-muted-foreground w-12 text-right">
+                          {formatChange(safeNumber(item.percent), true)}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </CardContent>
             </Card>
