@@ -1,28 +1,13 @@
-import express, { type Request, type Response, type RequestHandler } from "express";
+import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
-import { createRequire } from "node:module";
 
 import router from "./routes";
-
-const require = createRequire(import.meta.url);
-const pinoHttp = require("pino-http") as (options?: {
-  level?: string;
-}) => RequestHandler;
 
 const app = express();
 
 /* =========================
-   LOGGER
-========================= */
-app.use(
-  pinoHttp({
-    level: process.env.NODE_ENV === "production" ? "info" : "debug",
-  }),
-);
-
-/* =========================
-   🔥 CORS (CRITICAL FIX)
+   🔥 CORS — GLOBAL FIRST
 ========================= */
 const allowedOrigins = [
   "http://localhost:5173",
@@ -35,13 +20,13 @@ const allowedOrigins = [
 app.use(
   cors({
     origin: function (origin, callback) {
-      if (!origin) return callback(null, true); // allow server-to-server / curl
+      if (!origin) return callback(null, true);
 
       if (allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
 
-      return callback(new Error("Not allowed by CORS: " + origin));
+      return callback(new Error("Blocked by CORS: " + origin));
     },
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
@@ -51,35 +36,28 @@ app.use(
       "X-Admin-Pin-Token",
       "x-admin-pin-token",
     ],
-  }),
+  })
 );
 
-/* 🔥 THIS LINE IS WHAT YOU WERE MISSING */
+/* 🔥 THIS IS CRITICAL — YOU WERE MISSING IT */
 app.options("*", cors());
 
 /* =========================
    BODY + COOKIES
 ========================= */
+app.use(express.json());
 app.use(cookieParser());
-app.use(express.json({ limit: "10mb" }));
-app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
 /* =========================
-   ROUTES
+   HEALTH
 ========================= */
-app.get("/", (_req: Request, res: Response) => {
-  res.json({
-    status: "ok",
-    message: "Orion API server is running",
-  });
+app.get("/health", (_req, res) => {
+  res.json({ ok: true });
 });
 
-app.get("/health", (_req: Request, res: Response) => {
-  res.json({
-    status: "healthy",
-  });
-});
-
+/* =========================
+   ROUTES (AFTER CORS)
+========================= */
 app.use("/api", router);
 
 export default app;
