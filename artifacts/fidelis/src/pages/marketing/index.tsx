@@ -37,7 +37,7 @@ export default function MarketingPage() {
 
       <main className="flex-1 flex flex-col">
         <HeroSection />
-        <TickerSection />
+        
         <FeaturesSection />
       </main>
 
@@ -75,27 +75,7 @@ function HeroSection() {
   );
 }
 
-function TickerSection() {
-  const { data: indices } = useGetMarketIndices();
-  
-  if (!indices?.length) return null;
-  
-  return (
-    <div className="bg-card border-y py-3 overflow-hidden flex whitespace-nowrap">
-      <div className="flex animate-marquee gap-8 px-4 items-center">
-        {[...indices, ...indices].map((idx, i) => (
-          <div key={i} className="flex items-center gap-2 text-sm">
-            <span className="font-bold">{idx.name}</span>
-            <span>{formatCurrency(idx.value)}</span>
-            <span className={idx.change >= 0 ? "text-success" : "text-destructive"}>
-              {formatChange(idx.changePercent, true)}
-            </span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
+
 
 function FeaturesSection() {
   const features = [

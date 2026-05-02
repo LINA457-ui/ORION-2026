@@ -21,6 +21,8 @@ app.use(
     origin: [
       "http://localhost:5173",
       "https://orion-2026-fidelis.vercel.app",
+      "https://www.investmentorion.com",
+      "https://investmentorion.com",
     ],
     credentials: true,
   })
